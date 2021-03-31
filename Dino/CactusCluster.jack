@@ -1,0 +1,27 @@
+
+
+class CactusCluster {
+	field int height;
+	field int width;
+	field int left_x_pos;  // keep track of location using left_x_pos
+	field int sprite;  // distinguish between different types of cacti
+	
+	constructor CactusCluster new() {
+		let height = 20;
+		let width = 10;
+		return this;
+	}
+	method void dispose() {
+		do Memory.deAlloc(this);
+		return;
+	}
+	method int x() {
+		return left_x_pos;
+	}
+	method void update() {
+		return;
+	}
+	method void reset() {
+		return;
+	}
+}

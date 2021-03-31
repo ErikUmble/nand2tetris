@@ -1,0 +1,123 @@
+// Trex.jack
+// class to represent the dinosaur character
+//
+
+/** Implements the jumping dinosaur that is not supposed to collide with obstacles */
+class Trex {
+	
+	field int location;
+	field int initial_location;
+	field int downVelocity;  // represents the amount that the player still needs to be moving upward
+ 	field boolean feet_pos;
+	field int crouch_state;  // 0 if not crouching, 1 if just starting to crouch and 2 if continuing to crouch and 3 if exiting from a crouch (was crouching in the previous cycle)
+	
+	constructor Trex new(int pos) {
+		let location = pos;
+		let initial_location = pos;
+		let downVelocity = 0;
+		let feet_pos = true;
+		let crouch_state = 0;
+		do Graphics.drawStand(location);
+		return this;
+	}
+	
+	method void dispose() {
+		do Memory.deAlloc(this);
+		return;
+	}
+	
+	method void update() {
+		// Based on the current state (jumping, height, feet_pos, and crouching), re-render the character as needed 
+		
+		if (crouch_state = 0) { // crouch_state == 0 so do the normal
+			// First, figure out player location, then use that to re-render the necessary parts of the player
+			// simulate gravity by increasing downVelocity each cycle, but if player is on the ground,
+			// the ground pushes up and resets downVelocity to 0
+			let downVelocity = downVelocity + 1;
+			let location = location + (32 * downVelocity);
+			// Don't fall below ground level, but when reach ground, reset downVelocity
+			if (location > initial_location) {
+				let location = initial_location;
+				// if downVelocity > 1, then we are at the end of a jump and need to do a drawJump to clear the last artifacts
+				if (downVelocity > 1) {
+					do Graphics.drawJump(location, downVelocity);
+				}
+				let downVelocity = 0;
+			}
+			
+			// swap feet position if not in a jump
+			if (location = initial_location) {
+				do swap_feet();
+			}
+			// jumping, so re-render full player 
+			else {
+				do Graphics.drawJump(location, downVelocity);
+			}
+		}
+		else {  // crouch_state != 0, so we have to do a different type of rendering
+		
+			if (crouch_state = 3) { // was crouching, now need to exit from crouch
+				// wipe previous head
+				do Graphics.eraseCrouchHead(location + 1);
+				// draw new head
+				do Graphics.drawStandHead(location - 511);
+				let crouch_state = 0;
+			}
+			else {
+				if (crouch_state = 2) { // continues to crouch, so just swap feet pos
+					do swap_feet();
+					let crouch_state = 3; // crouching this clock cycle
+				}
+				else {  // crouch_state = 1, so just begining to crouch and must handle jump condition
+					
+					if (downVelocity) { // in the middle of a jump
+						// wipe the jumping part
+						do Graphics.eraseStand(location);
+						let location = initial_location;
+						let downVelocity = 0;
+					}
+					else { // was standing, so simply wipe the head
+						do Graphics.eraseStandHead(location - 511);
+					}
+					do Graphics.drawCrouch(location);
+					let crouch_state = 3; // crouching this clock cycle
+				
+				}
+			}
+			
+		
+		}
+		
+		return;
+		
+		
+	}
+	method void swap_feet() {
+		if (feet_pos) {
+			do Graphics.drawFeet1(location);
+			let feet_pos = false;
+		}
+		else {
+			do Graphics.drawFeet2(location);
+			let feet_pos = true;
+		}
+		return;
+	}
+	method void crouch() {
+		if (crouch_state) {
+			let crouch_state = 2;
+		}
+		else {
+			let crouch_state = 1;
+		}
+		return;
+	}
+	
+	method void jump() {
+		// only jump if on the ground 
+		if (location = initial_location) {
+			let downVelocity = -20;
+		}
+		return;
+	}
+}

@@ -1,0 +1,33 @@
+function CactusCluster.new 0
+push constant 4
+call Memory.alloc 1
+pop pointer 0
+push constant 20
+pop this 0
+push constant 10
+pop this 1
+push pointer 0
+return
+function CactusCluster.dispose 0
+push argument 0
+pop pointer 0
+push pointer 0
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+return
+function CactusCluster.x 0
+push argument 0
+pop pointer 0
+push this 2
+return
+function CactusCluster.update 0
+push argument 0
+pop pointer 0
+push constant 0
+return
+function CactusCluster.reset 0
+push argument 0
+pop pointer 0
+push constant 0
+return

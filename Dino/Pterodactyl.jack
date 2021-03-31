@@ -1,0 +1,12 @@
+
+
+class Pterodactyl {
+	constructor Pterodactyl new() {
+		return this;
+	}
+	method void dispose() {
+		do Memory.deAlloc(this);
+		return;
+	}
+
+}

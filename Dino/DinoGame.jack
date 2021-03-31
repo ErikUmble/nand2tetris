@@ -1,0 +1,56 @@
+
+
+class DinoGame {
+	field int delay;
+	field Trex player;
+	field Triangle tri0;
+	field boolean crashed;
+	//field int last_cycle_key;
+	
+	constructor DinoGame new() {
+		let player = Trex.new(7300);
+		let tri0 = Triangle.new();
+		let delay = 10;  // start slow?
+		let crashed = false;
+		return this;
+	}
+	method void dispose() {
+		do player.dispose();
+		do Memory.deAlloc(this);
+		return;
+	}
+	
+	method boolean check_input() {
+		var int key;
+		let key = Keyboard.keyPressed();
+		
+		if (key = 32) { // space bar to jump ( & ~(last_cycle_key = 32) to prevent multiple jumps from one space bar press)
+			do player.jump();
+		}
+		if (key = 131) { // up arrow to jump
+			do player.jump();
+		}
+		if (key = 133) { // down arrow to crouch
+			do player.crouch();
+		}
+		if (key = 81) {  // Q to quit
+			return false;
+		}
+		//let last_cycle_key = key;
+		return true;
+	}
+	method boolean run() {
+		while (~crashed) {
+			if (check_input()) {
+				do player.update();
+				do tri0.update();
+				do Sys.wait(delay);  // game speed delay
+			}
+			else {
+				return false;
+			}
+			
+		}
+		return true;
+	}
+}

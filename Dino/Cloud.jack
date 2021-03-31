@@ -1,0 +1,11 @@
+
+class Cloud {
+	constructor Cloud new() {
+		return this;
+	}
+	method void dispose() {
+		do Memory.deAlloc(this);
+		return;
+	}
+
+}
