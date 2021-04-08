@@ -1,7 +1,6 @@
 import os
 import sys
 
-
 ELEMENTS = {
     element_name: i
     for i, element_name in enumerate(["keyword", "symbol", "integerConstant", "stringConstant", "identifier",
@@ -125,34 +124,94 @@ class JackTokenizer:
                         commenting = False
 
 
-def terminal_xml_format(token, token_type):
+def terminal_xml_format(token, token_type, specification=None, st=None):
     token_element = reverse_elements[token_type]
+    if token_element == "identifier":
+        if specification is None:
+            if st is not None:
+                if st.kind_of(token) is not None:
+                    specification = "-".join(["", token, st.type_of(token),
+                                              st.kind_of(token), str(st.index_of(token)), "use"])
+                else:
+                    specification = "-className-use"
+            else:
+                specification = ""
+        token_element += specification
     # note: we replace the & first, so that it does not then replace all the other replacements
     xml_token = token.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
     return f"<{token_element}> {xml_token} </{token_element}>"
 
 
+class SymbolTable:
+    """Implements functionality of a symbol table for setting and looking up variables"""
+
+    def __init__(self):
+        # ST in form {name: (var_type, var_kind, index), ... }
+        self.classST = dict()
+        self.subroutineST = dict()
+        self.counts = {"local": 0, "argument": 0, "static": 0, "field": 0}
+
+    def define(self, var_name, var_type, var_kind):
+        if var_kind in ["local", "argument"]:
+            self.subroutineST[var_name] = (var_type, var_kind, self.counts[var_kind])
+        elif var_kind in ["static", "field"]:
+            self.classST[var_name] = (var_type, var_kind, self.counts[var_kind])
+        else:
+            raise Exception("Invalid variable kind")
+
+        self.counts[var_kind] += 1
+        return self.counts[var_kind] - 1  # return the defined variable's index
+
+    def var_count(self, var_kind):
+        if var_kind not in ["local", "argument", "static", "field"]:
+            raise Exception("Invalid variable kind")
+        return self.counts[var_kind]
+
+    def kind_of(self, var_name):
+        """returns the kind of the var_name, or None if it has not been defined"""
+        return self.subroutineST.get(var_name, self.classST.get(var_name, (None, None, None)))[1]
+
+    def type_of(self, var_name):
+        """returns the type of the var_name, or None if it has not been defined"""
+        return self.subroutineST.get(var_name, self.classST.get(var_name, (None, None, None)))[0]
+
+    def index_of(self, var_name):
+        """returns the index of the var_name, or None if it has not been defined"""
+        return self.subroutineST.get(var_name, self.classST.get(var_name, (None, None, None)))[2]
+
+    def reset_classST(self):
+        self.classST = dict()
+
+    def reset_subroutineSt(self):
+        self.subroutineST = dict()
+
+
 class CompilationEngine:
     """contract: a method is called only if it is known to be the next thing to compile, meaning the callee has
     advanced to see the method's first token or has looked ahead as necessary"""
+
     def __init__(self, filename=None):
         if filename is not None:
             self.tokenizer = JackTokenizer(filename)
         else:
             self.tokenizer = None
+        self.st = SymbolTable()
 
     def compile_class(self, tokenizer=None):
         tokenizer = tokenizer or self.tokenizer
+        self.st.reset_classST()
         token, token_type = tokenizer.advance()
-        assert(tokenizer.current_token[0] == "class")
+        assert (tokenizer.current_token[0] == "class")
+
         code = ["<class>", terminal_xml_format(token, token_type)]  # class
         class_name, token_type = tokenizer.advance()
 
-        assert(token_type == ELEMENTS["identifier"])
-        code.append(terminal_xml_format(class_name, token_type))  # className
+        assert (token_type == ELEMENTS["identifier"])
+
+        code.append(terminal_xml_format(class_name, token_type, "-class-def"))  # className
         token, token_type = tokenizer.advance()
 
-        assert(token == "{")
+        assert (token == "{")
         code.append(terminal_xml_format(token, token_type))  # {
         token, token_type = tokenizer.advance()
 
@@ -164,7 +223,7 @@ class CompilationEngine:
             code += self.compile_subroutine_dec(tokenizer)  # subroutineDec
             token, token_type = tokenizer.advance()  # we only advance when we use a token
 
-        assert(token == "}")
+        assert (token == "}")
         code.append(terminal_xml_format(token, token_type))  # }
 
         code.append("</class>")
@@ -173,26 +232,35 @@ class CompilationEngine:
     def compile_class_var_dec(self, tokenizer=None):
         tokenizer = tokenizer or self.tokenizer
         token, token_type = tokenizer.current_token
-        assert(token in ["static", "field"])
+        assert (token in ["static", "field"])
+        var_kind = token
         code = ["<classVarDec>", terminal_xml_format(token, token_type)]  # static | field
         token, token_type = tokenizer.advance()
 
-        assert(token in ["int", "char", "boolean"] or token_type == ELEMENTS["identifier"])
+        assert (token in ["int", "char", "boolean"] or token_type == ELEMENTS["identifier"])
+        var_type = token
         code.append(terminal_xml_format(token, token_type))  # type
         token, token_type = tokenizer.advance()
 
         assert (token_type == ELEMENTS["identifier"])
-        code.append(terminal_xml_format(token, token_type))  # varName
+        var_name = token
+        var_index = self.st.define(var_name, var_type, var_kind)
+        code.append(terminal_xml_format(token, token_type,
+                                        "-".join(["", var_name, var_type, var_kind, str(var_index), "def"])))  # varName
         token, token_type = tokenizer.advance()
 
         while token == ",":
             code.append(terminal_xml_format(token, token_type))  # ,
             token, token_type = tokenizer.advance()
             assert (token_type == ELEMENTS["identifier"])
-            code.append(terminal_xml_format(token, token_type))  # varName
+            var_name = token
+            var_index = self.st.define(var_name, var_type, var_kind)
+            code.append(terminal_xml_format(token, token_type,
+                                            "-".join(
+                                                ["", var_name, var_type, var_kind, str(var_index), "def"])))  # varName
             token, token_type = tokenizer.advance()
 
-        assert(token == ";")
+        assert (token == ";")
         code.append(terminal_xml_format(token, token_type))  # ;
 
         code.append("</classVarDec>")
@@ -201,8 +269,9 @@ class CompilationEngine:
     def compile_subroutine_dec(self, tokenizer=None):
         tokenizer = tokenizer or self.tokenizer
         token, token_type = tokenizer.current_token
+        self.st.reset_subroutineSt()
         code = ["<subroutineDec>"]
-        assert(token in ["constructor", "function", "method"])
+        assert (token in ["constructor", "function", "method"])
         code.append(terminal_xml_format(token, ELEMENTS["keyword"]))
         token, token_type = tokenizer.advance()
 
@@ -210,11 +279,11 @@ class CompilationEngine:
         code.append(terminal_xml_format(token, token_type))  # returnType
         token, token_type = tokenizer.advance()
 
-        assert(token_type == ELEMENTS["identifier"])
-        code.append(terminal_xml_format(token, token_type))  # subroutineName
+        assert (token_type == ELEMENTS["identifier"])
+        code.append(terminal_xml_format(token, token_type, "-subroutine-def"))  # subroutineName
         token, token_type = tokenizer.advance()
 
-        assert(token == "(")
+        assert (token == "(")
         code.append(terminal_xml_format(token, token_type))  # (
         token, token_type = tokenizer.advance()
 
@@ -236,11 +305,17 @@ class CompilationEngine:
         token, token_type = tokenizer.current_token
         code = ["<parameterList>"]
         if token in ["int", "char", "boolean", "void"] or token_type == ELEMENTS["identifier"]:
+            var_type = token
             code.append(terminal_xml_format(token, token_type))  # type
             token, token_type = tokenizer.advance()
 
-            assert(token_type == ELEMENTS["identifier"])
-            code.append(terminal_xml_format(token, token_type))  # varName
+            assert (token_type == ELEMENTS["identifier"])
+            self.st.define(token, var_type, "argument")
+            code.append(terminal_xml_format(token, token_type, "-".join(["", token,
+                                                                         self.st.type_of(token),
+                                                                         self.st.kind_of(token),
+                                                                         str(self.st.index_of(token))],
+                                                                        "def")))  # varName
 
             while tokenizer.next_token()[0] == ",":
                 token, token_type = tokenizer.advance()
@@ -248,11 +323,17 @@ class CompilationEngine:
                 token, token_type = tokenizer.advance()
 
                 assert (token in ["int", "char", "boolean"] or token_type == ELEMENTS["identifier"])
+                var_type = token
                 code.append(terminal_xml_format(token, token_type))  # type
                 token, token_type = tokenizer.advance()
 
                 assert (token_type == ELEMENTS["identifier"])
-                code.append(terminal_xml_format(token, token_type))  # varName
+                self.st.define(token, var_type, "argument")
+                code.append(terminal_xml_format(token, token_type, "-".join(["", token,
+                                                                             self.st.type_of(token),
+                                                                             self.st.kind_of(token),
+                                                                             str(self.st.index_of(token)),
+                                                                             "def"])))  # varName
 
         code.append("</parameterList>")
         return code
@@ -260,7 +341,7 @@ class CompilationEngine:
     def compile_subroutine_body(self, tokenizer=None):
         tokenizer = tokenizer or self.tokenizer
         token, token_type = tokenizer.current_token
-        assert(token == "{")
+        assert (token == "{")
         code = ["<subroutineBody>", terminal_xml_format(token, ELEMENTS["symbol"])]  # {
         token, token_type = tokenizer.advance()
         # varDec*
@@ -273,7 +354,7 @@ class CompilationEngine:
             code += self.compile_statements(tokenizer)
             token, token_type = tokenizer.advance()
 
-        assert(token == "}")
+        assert (token == "}")
         code.append(terminal_xml_format(token, token_type))  # }
 
         code.append("</subroutineBody>")
@@ -281,16 +362,22 @@ class CompilationEngine:
 
     def compile_var_dec(self, tokenizer=None):
         tokenizer = tokenizer or self.tokenizer
-        assert(tokenizer.current_token[0] == "var")
+        assert (tokenizer.current_token[0] == "var")
         code = ["<varDec>", terminal_xml_format("var", ELEMENTS["keyword"])]  # var
         token, token_type = tokenizer.advance()
 
-        assert(token in ["int", "char", "boolean"] or token_type == ELEMENTS["identifier"])
-        code.append(terminal_xml_format(token, token_type))  # type
+        assert (token in ["int", "char", "boolean"] or token_type == ELEMENTS["identifier"])
+        var_type = token
+        code.append(terminal_xml_format(token, token_type, st=self.st))  # type
         token, token_type = tokenizer.advance()
 
         assert (token_type == ELEMENTS["identifier"])
-        code.append(terminal_xml_format(token, token_type))  # varName
+        self.st.define(token, var_type, "local")
+        code.append(terminal_xml_format(token, token_type, "-".join(["", token,
+                                                                     self.st.type_of(token),
+                                                                     self.st.kind_of(token),
+                                                                     str(self.st.index_of(token)),
+                                                                     "def"])))  # varName
         token, token_type = tokenizer.advance()
 
         while token == ",":
@@ -298,10 +385,15 @@ class CompilationEngine:
             token, token_type = tokenizer.advance()
 
             assert (token_type == ELEMENTS["identifier"])
-            code.append(terminal_xml_format(token, token_type))  # varName
+            self.st.define(token, var_type, "local")
+            code.append(terminal_xml_format(token, token_type, "-".join(["", token,
+                                                                         self.st.type_of(token),
+                                                                         self.st.kind_of(token),
+                                                                         str(self.st.index_of(token)),
+                                                                         "def"])))  # varName
             token, token_type = tokenizer.advance()
 
-        assert(token == ";")
+        assert (token == ";")
         code.append(terminal_xml_format(token, token_type))  # ;
 
         code.append("</varDec>")
@@ -346,12 +438,16 @@ class CompilationEngine:
 
     def compile_let_statement(self, tokenizer=None):
         tokenizer = tokenizer or self.tokenizer
-        assert(tokenizer.current_token[0] == "let")
+        assert (tokenizer.current_token[0] == "let")
         code = ["<letStatement>", terminal_xml_format("let", ELEMENTS["keyword"])]  # let
         token, token_type = tokenizer.advance()
 
         assert (token_type == ELEMENTS["identifier"])
-        code.append(terminal_xml_format(token, token_type))  # varName
+        code.append(terminal_xml_format(token, token_type, "-".join(["", token,
+                                                                     self.st.type_of(token),
+                                                                     self.st.kind_of(token),
+                                                                     str(self.st.index_of(token)),
+                                                                     "assign"])))  # varName
         token, token_type = tokenizer.advance()
 
         # ([ expression ])?
@@ -362,11 +458,11 @@ class CompilationEngine:
             code += self.compile_expression(tokenizer)
             token, token_type = tokenizer.advance()
 
-            assert(token == "]")
+            assert (token == "]")
             code.append(terminal_xml_format(token, token_type))  # ]
             token, token_type = tokenizer.advance()
 
-        assert(token == "=")
+        assert (token == "=")
         code.append(terminal_xml_format(token, token_type))  # =
         tokenizer.advance()
 
@@ -468,7 +564,15 @@ class CompilationEngine:
 
         # subroutineCall
         assert (token_type == ELEMENTS["identifier"])
-        code.append(terminal_xml_format(token, token_type))  # subroutineName | (className | varName)
+        if tokenizer.next_token()[0] == ".":
+            if self.st.kind_of(token) is not None:
+                specification = "-".join(["", self.st.type_of(token),
+                                          self.st.kind_of(token), str(self.st.index_of(token)), "use"])
+            else:
+                specification = "-classname-use"
+        else:
+            specification = "-subroutineName-use"
+        code.append(terminal_xml_format(token, token_type, specification))  # subroutineName | (className | varName)
         token, token_type = tokenizer.advance()
 
         if token == ".":
@@ -476,7 +580,7 @@ class CompilationEngine:
             token, token_type = tokenizer.advance()
 
             assert (token_type == ELEMENTS["identifier"])
-            code.append(terminal_xml_format(token, token_type))  # subroutineName
+            code.append(terminal_xml_format(token, token_type, "subroutineName-use"))  # subroutineName
             token, token_type = tokenizer.advance()
 
         assert (token == "(")
@@ -555,7 +659,10 @@ class CompilationEngine:
             # subroutineName(expressionList) | varName.subroutineName(expressionList)
             next_token = tokenizer.next_token()[0]
             if next_token == "[":
-                code.append(terminal_xml_format(token, token_type))  # varName
+                code.append(terminal_xml_format(token, token_type, "-".join(["", self.st.type_of(token),
+                                                                             self.st.kind_of(token),
+                                                                             str(self.st.index_of(token)),
+                                                                             "use"])))  # varName
                 token, token_type = tokenizer.advance()
 
                 code.append(terminal_xml_format(token, token_type))  # [
@@ -569,7 +676,7 @@ class CompilationEngine:
 
             elif next_token == "(":
                 # subroutineCall
-                code.append(terminal_xml_format(token, token_type))  # subroutineName | (className | varName)
+                code.append(terminal_xml_format(token, token_type, "-subroutineName-use"))  # subroutineName
                 token, token_type = tokenizer.advance()
 
                 assert (token == "(")
@@ -584,7 +691,12 @@ class CompilationEngine:
                 code.append(terminal_xml_format(token, token_type))  # )
                 # end of subroutine call
             elif next_token == ".":
-                code.append(terminal_xml_format(token, token_type))  # varName
+                if self.st.kind_of(token) is not None:
+                    specification = "-".join(["", self.st.type_of(token),
+                                              self.st.kind_of(token), str(self.st.index_of(token)), "use"])
+                else:
+                    specification = "-className-use"
+                code.append(terminal_xml_format(token, token_type, specification))  # varName
                 token, token_type = tokenizer.advance()
 
                 code.append(terminal_xml_format(token, token_type))  # .
@@ -592,7 +704,7 @@ class CompilationEngine:
 
                 code += self.compile_term(tokenizer)  # subroutine(expressionList)
             else:
-                code.append(terminal_xml_format(token, token_type))  # varName
+                code.append(terminal_xml_format(token, token_type, st=self.st))  # varName
 
         code.append("</term>")
         return code
