@@ -16,9 +16,10 @@ ELEMENTS = {
 reverse_elements = {
     i: element_name for element_name, i in ELEMENTS.items()
 }
+STATEMENTS = ["let", "if", "while", "do", "return", "break", "continue"]
 KEYWORDS = ["class", "constructor", "function", "method", "field", "static",
             "var", "int", "char", "boolean", "void", "true", "false", "null", "this",
-            "let", "do", "if", "else", "while", "return"]
+            "let", "do", "if", "else", "while", "return", "break", "continue"]
 SYMBOLS = "{}()[].,;+-*/&|<>=~"
 DIGITS = "0123456789"
 LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -187,6 +188,7 @@ class CompilationEngine:
         self.st = SymbolTable()
         self.current_class = ""
         self.num_labels = 0
+        self.while_labels = ("", "")
 
     def compile_class(self, tokenizer=None):
         tokenizer = tokenizer or self.tokenizer
@@ -348,7 +350,7 @@ class CompilationEngine:
             token, token_type = tokenizer.advance()
 
         # statements
-        if token in ["let", "if", "while", "do", "return"]:
+        if token in STATEMENTS:
             code += self.compile_statements(tokenizer)
             token, token_type = tokenizer.advance()
 
@@ -392,7 +394,7 @@ class CompilationEngine:
         tokenizer = tokenizer or self.tokenizer
         token, token_type = tokenizer.current_token
 
-        if token in ["let", "if", "while", "do", "return"]:
+        if token in STATEMENTS:
             code = []
             if token == "let":
                 code += self.compile_let_statement(tokenizer)
@@ -400,12 +402,16 @@ class CompilationEngine:
                 code += self.compile_if_statement(tokenizer)
             elif token == "while":
                 code += self.compile_while_statement(tokenizer)
+            elif token == "break":
+                code += self.compile_break_statement(tokenizer)
+            elif token == "continue":
+                code += self.compile_continue_statement(tokenizer)
             elif token == "do":
                 code += self.compile_do_statement(tokenizer)
             else:
                 code += self.compile_return_statement(tokenizer)
 
-            while tokenizer.next_token()[0] in ["let", "if", "while", "do", "return"]:
+            while tokenizer.next_token()[0] in STATEMENTS:
                 # we look ahead with statements to avoid advancing into a token beyond a statement
                 token, token_type = tokenizer.advance()
 
@@ -415,6 +421,10 @@ class CompilationEngine:
                     code += self.compile_if_statement(tokenizer)
                 elif token == "while":
                     code += self.compile_while_statement(tokenizer)
+                elif token == "break":
+                    code += self.compile_break_statement(tokenizer)
+                elif token == "continue":
+                    code += self.compile_continue_statement(tokenizer)
                 elif token == "do":
                     code += self.compile_do_statement(tokenizer)
                 else:
@@ -517,8 +527,8 @@ class CompilationEngine:
         token, token_type = tokenizer.advance()
 
         # Generate L1 and L2
-        l1 = "IF_FALSE" + str(self.num_labels)
-        l2 = "IF_END" + str(self.num_labels)
+        l1 = "$_IF_FALSE" + str(self.num_labels)
+        l2 = "$_IF_END" + str(self.num_labels)
         self.num_labels += 1
 
         # (
@@ -545,7 +555,7 @@ class CompilationEngine:
         token, token_type = tokenizer.advance()
 
         # compiled statements
-        if token in ["let", "if", "while", "do", "return"]:
+        if token in STATEMENTS:
             code += self.compile_statements(tokenizer)
             token, token_type = tokenizer.advance()
 
@@ -564,7 +574,7 @@ class CompilationEngine:
             token, token_type = tokenizer.advance()
 
             # statements
-            if token in ["let", "if", "while", "do", "return"]:
+            if token in STATEMENTS:
                 code += self.compile_statements(tokenizer)
                 token, token_type = tokenizer.advance()
 
@@ -589,8 +599,11 @@ class CompilationEngine:
         assert (tokenizer.current_token[0] == "while")
 
         # Generate L1 and L2
-        l1 = "WHILE_EXP" + str(self.num_labels)
-        l2 = "WHILE_END" + str(self.num_labels)
+        l1 = "$_WHILE_EXP" + str(self.num_labels)
+        l2 = "$_WHILE_END" + str(self.num_labels)
+        # save previous labels and make the new ones available for use of break and continue within the statments block
+        (previous_l1, previous_l2) = self.while_labels
+        self.while_labels = (l1, l2)
         self.num_labels += 1
 
         code = [get_label(l1)]
@@ -613,15 +626,41 @@ class CompilationEngine:
         token, token_type = tokenizer.advance()
 
         # compiled statements
-        if token in ["let", "if", "while", "do", "return"]:
+        if token in STATEMENTS:
             code += self.compile_statements(tokenizer)
             token, token_type = tokenizer.advance()
 
         # }
         assert (token == "}")
 
+        # re-instate outer while loop labels
+        self.while_labels = (previous_l1, previous_l2)
+
         code += [get_goto(l1), get_label(l2)]
         return code
+
+    def compile_break_statement(self, tokenizer=None):
+        """:returns a list with the goto command to exit the current innermost while loop"""
+        tokenizer = tokenizer or self.tokenizer
+        # break
+        assert (tokenizer.current_token[0] == "break")
+        token, token_type = tokenizer.advance()
+
+        # ;
+        assert (token == ";")
+        assert (self.while_labels[1] != "")
+        return [get_goto(self.while_labels[1])]
+
+    def compile_continue_statement(self, tokenizer=None):
+        tokenizer = tokenizer or self.tokenizer
+        # continue
+        assert (tokenizer.current_token[0] == "continue")
+        token, token_type = tokenizer.advance()
+
+        # ;
+        assert (token == ";")
+        assert (self.while_labels[0] != "")
+        return [get_goto(self.while_labels[0])]
 
     def compile_do_statement(self, tokenizer=None):
         """returns a list of vm commands to call the subroutine specified by the do statement"""
