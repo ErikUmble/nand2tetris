@@ -10,7 +10,31 @@ class Startscreen {
 		var String str;
 		
 		// Add screen prompt
-		let str = "Dino Game: Press space to begin!"; 
+		let str = "Dino Game:";
+		do Output.moveCursor(6, 10);
+		do Output.printString(str);
+		do str.dispose();
+		
+		// Add screen prompt
+		let str = "Space or up-arrow to jump";
+		do Output.moveCursor(7, 10);
+		do Output.printString(str);
+		do str.dispose();
+		
+		// Add screen prompt
+		let str = "down-arrow to crouch or exit from a jump";
+		do Output.moveCursor(8, 10);
+		do Output.printString(str);
+		do str.dispose();
+		
+		// Add screen prompt
+		let str = "q to quit";
+		do Output.moveCursor(9, 10);
+		do Output.printString(str);
+		do str.dispose();
+		
+		// Add screen prompt
+		let str = "Press space to begin!";
 		do Output.moveCursor(10, 10);
 		do Output.printString(str);
 		do str.dispose();

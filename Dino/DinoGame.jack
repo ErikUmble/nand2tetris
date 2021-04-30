@@ -162,8 +162,14 @@ class DinoGame {
 				let score = score + 1;
 				do Output.moveCursor(1,7);
 				do Output.printInt(score);
+				
+				// update delay if necessary
+				if ((score = 500) | (score = 1000) | (score = 1500) | (score = 2000)) {
+					let delay = delay - 1;
+				}
 			}
 			else {let clock = clock + 1;}
+			
 			
 			
 		}
