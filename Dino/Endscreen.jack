@@ -1,0 +1,30 @@
+
+class Endscreen {
+
+	function boolean go() {
+		var boolean break;
+		var int key;
+		var String str;
+		
+		// Add screen prompt
+		let str = "Press space to play again, or press q to quit"; 
+		do Output.moveCursor(10, 10);
+		do Output.printString(str);
+		do str.dispose();
+		
+		// first wait until user stops pressing a key
+		while (~(Keyboard.keyPressed() = 0)) {}
+		do Sys.wait(100);
+		// Get response
+		while (~break) {
+			let key = Keyboard.keyPressed();
+			if ((key = 32) | (key = 131) | (key = 133) | (key = 81)) {
+				let break = true;
+			}
+		}
+		if (key = 81) {  // Q to quit
+			return false;
+		}
+		return true;
+	}
+}

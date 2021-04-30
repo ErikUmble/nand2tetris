@@ -1,21 +1,96 @@
-
-
+/**
+* DinoGame 
+* DinoGameObject.run returns score when the player crashes, and 0 (false) when the player quits (q)
+*/
 class DinoGame {
 	field int delay;
-	field Trex player;
-	field Triangle tri0;
-	field boolean crashed;
-	//field int last_cycle_key;
 	
-	constructor DinoGame new() {
+	field Trex player;
+	field int player_tlx;
+	field int player_tly;
+	field int player_brx;
+	field int player_bry;
+	
+	field Pterodactyl flying0;
+	field Pterodactyl flying1;
+	field Pterodactyl flying2;
+	
+	field CactusCluster cactus0;
+	field CactusCluster cactus1;
+	field CactusCluster cactus2;
+	field CactusCluster cactus3;
+	
+	field Cloud cloud0;
+	field Cloud cloud1;
+	field Cloud cloud2;
+	field boolean crashed;
+	
+	
+	
+	field int clock;
+	field int score;
+	field int high_score;
+	
+	constructor DinoGame new(int highest_score) {
 		let player = Trex.new(7300);
-		let tri0 = Triangle.new();
-		let delay = 10;  // start slow?
+		let player_tlx = 4;
+		let player_brx = 5;
+		let player_tly = player.collision_box_tly();
+		let player_bry = player_tly + 32;
+		
+		let flying0 = Pterodactyl.new();
+		let flying1 = Pterodactyl.new();
+		let flying2 = Pterodactyl.new();
+		
+		let cactus0 = CactusCluster.new();
+		let cactus1 = CactusCluster.new();
+		let cactus2 = CactusCluster.new();
+		let cactus3 = CactusCluster.new();
+		
+		let cloud0 = Cloud.new(27);
+		let cloud1 = Cloud.new(512);
+		let cloud2 = Cloud.new(0);
+		
+		let delay = 7;  // start slow?
 		let crashed = false;
+		
+		let clock = 0;
+		let score = 0;
+		let high_score = highest_score;
+		
+		// setup screen
+		do Screen.clearScreen();
+		do Output.moveCursor(0,0);
+		do Output.printString("High Score: ");
+		do Output.moveCursor(0,12);
+		do Output.printInt(high_score);
+		
+		do Output.moveCursor(1,0);
+		do Output.printString("Score: ");
+		do Output.moveCursor(1,7);
+		do Output.printInt(score);
+		// ground
+		/*do Screen.setColor(true);
+		do Screen.drawLine(0, 244, 511, 244);*/
+		
 		return this;
 	}
 	method void dispose() {
 		do player.dispose();
+		
+		do flying0.dispose();
+		do flying1.dispose();
+		do flying2.dispose();
+		
+		do cloud0.dispose();
+		do cloud1.dispose();
+		do cloud2.dispose();
+		
+		do cactus0.dispose();
+		do cactus1.dispose();
+		do cactus2.dispose();
+		do cactus3.dispose();
+		
 		do Memory.deAlloc(this);
 		return;
 	}
@@ -39,18 +114,61 @@ class DinoGame {
 		//let last_cycle_key = key;
 		return true;
 	}
-	method boolean run() {
+	method int run() {
 		while (~crashed) {
 			if (check_input()) {
+				// update each object's state
 				do player.update();
-				do tri0.update();
+				
+				do flying0.update();
+				do flying1.update();
+				do flying2.update();
+				do Pterodactyl.decrement_rightmost();
+				
+				do cactus0.update();
+				do cactus1.update();
+				do cactus2.update();
+				do cactus3.update();
+				do CactusCluster.decrement_rightmost();
+				
+				do cloud0.update();
+				do cloud1.update();
+				do cloud2.update();
+				do Cloud.decrement_rightmost();
+				
+				// check for collisions
+				let player_tly = player.collision_box_tly();
+				let player_bry = player_tly + 32;
+				if (cactus0.collision(player_tlx, player_tly, player_brx, player_bry) | 
+					cactus1.collision(player_tlx, player_tly, player_brx, player_bry) |
+					cactus2.collision(player_tlx, player_tly, player_brx, player_bry) |
+					cactus3.collision(player_tlx, player_tly, player_brx, player_bry) |
+					
+					flying0.collision(player_tlx, player_tly, player_brx, player_bry) |
+					flying1.collision(player_tlx, player_tly, player_brx, player_bry) |
+					flying2.collision(player_tlx, player_tly, player_brx, player_bry)
+					) {
+					
+					let crashed = true;
+					}
 				do Sys.wait(delay);  // game speed delay
+				
 			}
 			else {
-				return false;
+				return 0; // quit
 			}
+			if (clock = 3) { // update and display score ever 4 cycles
+				let clock = 0; 
+				let score = score + 1;
+				do Output.moveCursor(1,7);
+				do Output.printInt(score);
+			}
+			else {let clock = clock + 1;}
+			
 			
 		}
-		return true;
+		// do endScreen
+		if (score > high_score) {return score;}
+		return high_score;
 	}
 }
