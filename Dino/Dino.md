@@ -1,3 +1,0 @@
-# Dino
-
-## Description
