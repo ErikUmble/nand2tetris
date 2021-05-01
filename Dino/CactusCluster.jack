@@ -20,7 +20,8 @@ class CactusCluster {
 	
 	constructor CactusCluster new() {
 		do reset();
-		let rightmost = 30;
+		if (~rightmost) {let rightmost = 30;}
+		
 		return this;
 	}
 	function void decrement_rightmost() {
@@ -150,7 +151,30 @@ class CactusCluster {
 				do reset();
 			}
 			}}}}}}}}}}}}
-		}}}
+		}
+		else {if (sprite = -1) {
+			if (sprite_seq_pos = 1) {
+				do Graphics.Cactus1End1(location);
+			}
+			else {if (sprite_seq_pos = 2) {
+				do Graphics.Cactus1End2(location);
+			}
+			else {if (sprite_seq_pos = 3) {
+				do Graphics.Cactus1End3(location);
+			}
+			else {if (sprite_seq_pos = 4) {
+				do Graphics.Cactus1End4(location);
+			}
+			else {if (sprite_seq_pos = 5) {
+				do Graphics.Cactus1End5(location);
+			}
+			else {if (sprite_seq_pos = 6) {
+				do Graphics.Cactus1End6(location);
+				let sprite_seq_pos = 0;
+				do reset();
+			}}}}}}}
+		}
+		}}
 		
 		if (location = destroy_location & sprite > 0) { // passed the left edge of the screen on ground level
 			// begin the end process
@@ -160,14 +184,14 @@ class CactusCluster {
 			//let location = location - 1;
 		}
 		let sprite_seq_pos = sprite_seq_pos + 1;
-		
+
 		return;
 	}
 	method void reset() {
-		let sprite = 2;
+		let sprite = LCGRandom.randRange(1,2);
 		if (sprite = 1) {
-			let height = 15;
-			let width = 2; // 16 is the width in pixels of Cactus1
+			let height = 21;
+			let width = 1; // 16 is the width in pixels of Cactus1
 		}
 		else {if (sprite = 2) {
 			let height = 16;
@@ -175,7 +199,7 @@ class CactusCluster {
 		}}
 		
 		let tl0y = 244 - height;
-		let tl0x = rightmost + LCGRandom.randRange(40, 300); // put the next cactus a random amount beyond the current rightmost cactus (it must be at least 16 beyond, otherwise it could overlap due to the rapid decrease when off-screen)
+		let tl0x = rightmost + LCGRandom.randRange(20, 400); // put the next cactus a random amount beyond the current rightmost cactus (it must be at least 16 beyond, otherwise it could overlap due to the rapid decrease when off-screen)
 		let rightmost = tl0x;
 		let br0y = 244;
 		let br0x = tl0x + width;

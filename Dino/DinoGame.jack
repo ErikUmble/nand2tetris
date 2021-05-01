@@ -19,6 +19,7 @@ class DinoGame {
 	field CactusCluster cactus1;
 	field CactusCluster cactus2;
 	field CactusCluster cactus3;
+	field CactusCluster cactus4;
 	
 	field Cloud cloud0;
 	field Cloud cloud1;
@@ -46,6 +47,7 @@ class DinoGame {
 		let cactus1 = CactusCluster.new();
 		let cactus2 = CactusCluster.new();
 		let cactus3 = CactusCluster.new();
+		let cactus4 = CactusCluster.new();
 		
 		let cloud0 = Cloud.new(27);
 		let cloud1 = Cloud.new(512);
@@ -129,6 +131,7 @@ class DinoGame {
 				do cactus1.update();
 				do cactus2.update();
 				do cactus3.update();
+				do cactus4.update();
 				do CactusCluster.decrement_rightmost();
 				
 				do cloud0.update();
@@ -143,6 +146,7 @@ class DinoGame {
 					cactus1.collision(player_tlx, player_tly, player_brx, player_bry) |
 					cactus2.collision(player_tlx, player_tly, player_brx, player_bry) |
 					cactus3.collision(player_tlx, player_tly, player_brx, player_bry) |
+					cactus4.collision(player_tlx, player_tly, player_brx, player_bry) |
 					
 					flying0.collision(player_tlx, player_tly, player_brx, player_bry) |
 					flying1.collision(player_tlx, player_tly, player_brx, player_bry) |

@@ -129,7 +129,7 @@ class Cloud {
 		let height = LCGRandom.randRange(100, 160);
 		let destroy_location = (height * 32);
 		if (x = 0) {
-			let x_coord = rightmost + LCGRandom.randRange(100, 300);
+			let x_coord = rightmost + LCGRandom.randRange(100, 350);
 		}
 		// if we are given a starting coordinate
 		else {let x_coord = x; let height = 150;}
