@@ -4,7 +4,7 @@
 A clone of the chrome dino game, implemented with Jack on the Hack platform.
 
 ## Demo
-<iframe width="560" height="315" src="https://www.youtube.com/embed/IvZH-FljHuM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+https://www.youtube.com/watch?v=IvZH-FljHuM
 
 ## Usage
 Download the software package from nand2tetris (https://www.nand2tetris.org/software)
