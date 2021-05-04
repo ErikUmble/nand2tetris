@@ -18,4 +18,5 @@ LINK################
 (Warning, do not watch if you want to discover the hidden features yourself)
 
 ## Why you should play this
-
+There are glitches that turned into features
+![feature](./images/flying-dino.png)
