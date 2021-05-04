@@ -1,0 +1,482 @@
+function Cloud.new 0
+push constant 6
+call Memory.alloc 1
+pop pointer 0
+push pointer 0
+push argument 0
+call Cloud.reset 2
+pop temp 0
+push constant 27
+pop static 0
+push pointer 0
+return
+function Cloud.dispose 0
+push argument 0
+pop pointer 0
+push pointer 0
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+return
+function Cloud.decrement_rightmost 0
+push static 0
+push constant 1
+sub
+pop static 0
+push static 0
+push constant 28
+lt
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 28
+pop static 0
+label IF_FALSE0
+push constant 0
+return
+function Cloud.update 0
+push argument 0
+pop pointer 0
+push this 2
+push constant 27
+gt
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push this 1
+push constant 1
+sub
+pop this 1
+push this 2
+push constant 1
+sub
+pop this 2
+push constant 0
+return
+label IF_FALSE0
+push this 5
+push constant 3
+eq
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push this 4
+push constant 0
+eq
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push this 1
+call Graphics.drawCloudPos8 1
+pop temp 0
+push this 1
+push constant 1
+sub
+pop this 1
+push this 2
+push constant 1
+sub
+pop this 2
+goto IF_END2
+label IF_FALSE2
+push this 4
+push constant 1
+eq
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push this 1
+call Graphics.drawCloudPos1 1
+pop temp 0
+goto IF_END3
+label IF_FALSE3
+push this 4
+push constant 2
+eq
+if-goto IF_TRUE4
+goto IF_FALSE4
+label IF_TRUE4
+push this 1
+call Graphics.drawCloudPos2 1
+pop temp 0
+goto IF_END4
+label IF_FALSE4
+push this 4
+push constant 3
+eq
+if-goto IF_TRUE5
+goto IF_FALSE5
+label IF_TRUE5
+push this 1
+call Graphics.drawCloudPos3 1
+pop temp 0
+goto IF_END5
+label IF_FALSE5
+push this 4
+push constant 4
+eq
+if-goto IF_TRUE6
+goto IF_FALSE6
+label IF_TRUE6
+push this 1
+call Graphics.drawCloudPos4 1
+pop temp 0
+goto IF_END6
+label IF_FALSE6
+push this 4
+push constant 5
+eq
+if-goto IF_TRUE7
+goto IF_FALSE7
+label IF_TRUE7
+push this 1
+call Graphics.drawCloudPos5 1
+pop temp 0
+goto IF_END7
+label IF_FALSE7
+push this 4
+push constant 6
+eq
+if-goto IF_TRUE8
+goto IF_FALSE8
+label IF_TRUE8
+push this 1
+call Graphics.drawCloudPos6 1
+pop temp 0
+goto IF_END8
+label IF_FALSE8
+push this 4
+push constant 7
+eq
+if-goto IF_TRUE9
+goto IF_FALSE9
+label IF_TRUE9
+push this 1
+call Graphics.drawCloudPos7 1
+pop temp 0
+push constant 1
+neg
+pop this 4
+goto IF_END9
+label IF_FALSE9
+push this 4
+push constant 101
+eq
+if-goto IF_TRUE10
+goto IF_FALSE10
+label IF_TRUE10
+push this 3
+call Graphics.drawCloudEnd1 1
+pop temp 0
+goto IF_END10
+label IF_FALSE10
+push this 4
+push constant 102
+eq
+if-goto IF_TRUE11
+goto IF_FALSE11
+label IF_TRUE11
+push this 3
+call Graphics.drawCloudEnd2 1
+pop temp 0
+goto IF_END11
+label IF_FALSE11
+push this 4
+push constant 103
+eq
+if-goto IF_TRUE12
+goto IF_FALSE12
+label IF_TRUE12
+push this 3
+call Graphics.drawCloudEnd3 1
+pop temp 0
+goto IF_END12
+label IF_FALSE12
+push this 4
+push constant 103
+eq
+if-goto IF_TRUE13
+goto IF_FALSE13
+label IF_TRUE13
+push this 3
+call Graphics.drawCloudEnd4 1
+pop temp 0
+goto IF_END13
+label IF_FALSE13
+push this 4
+push constant 105
+eq
+if-goto IF_TRUE14
+goto IF_FALSE14
+label IF_TRUE14
+push this 3
+call Graphics.drawCloudEnd5 1
+pop temp 0
+goto IF_END14
+label IF_FALSE14
+push this 4
+push constant 106
+eq
+if-goto IF_TRUE15
+goto IF_FALSE15
+label IF_TRUE15
+push this 3
+call Graphics.drawCloudEnd6 1
+pop temp 0
+goto IF_END15
+label IF_FALSE15
+push this 4
+push constant 107
+eq
+if-goto IF_TRUE16
+goto IF_FALSE16
+label IF_TRUE16
+push this 3
+call Graphics.drawCloudEnd7 1
+pop temp 0
+goto IF_END16
+label IF_FALSE16
+push this 4
+push constant 108
+eq
+if-goto IF_TRUE17
+goto IF_FALSE17
+label IF_TRUE17
+push this 3
+call Graphics.drawCloudEnd8 1
+pop temp 0
+goto IF_END17
+label IF_FALSE17
+push this 4
+push constant 109
+eq
+if-goto IF_TRUE18
+goto IF_FALSE18
+label IF_TRUE18
+push this 3
+call Graphics.drawCloudEnd9 1
+pop temp 0
+goto IF_END18
+label IF_FALSE18
+push this 4
+push constant 110
+eq
+if-goto IF_TRUE19
+goto IF_FALSE19
+label IF_TRUE19
+push this 3
+call Graphics.drawCloudEnd10 1
+pop temp 0
+goto IF_END19
+label IF_FALSE19
+push this 4
+push constant 111
+eq
+if-goto IF_TRUE20
+goto IF_FALSE20
+label IF_TRUE20
+push this 3
+call Graphics.drawCloudEnd11 1
+pop temp 0
+goto IF_END20
+label IF_FALSE20
+push this 4
+push constant 112
+eq
+if-goto IF_TRUE21
+goto IF_FALSE21
+label IF_TRUE21
+push this 3
+call Graphics.drawCloudEnd12 1
+pop temp 0
+goto IF_END21
+label IF_FALSE21
+push this 4
+push constant 113
+eq
+if-goto IF_TRUE22
+goto IF_FALSE22
+label IF_TRUE22
+push this 3
+call Graphics.drawCloudEnd13 1
+pop temp 0
+goto IF_END22
+label IF_FALSE22
+push this 4
+push constant 114
+eq
+if-goto IF_TRUE23
+goto IF_FALSE23
+label IF_TRUE23
+push this 3
+call Graphics.drawCloudEnd14 1
+pop temp 0
+goto IF_END23
+label IF_FALSE23
+push this 4
+push constant 115
+eq
+if-goto IF_TRUE24
+goto IF_FALSE24
+label IF_TRUE24
+push this 3
+call Graphics.drawCloudEnd15 1
+pop temp 0
+goto IF_END24
+label IF_FALSE24
+push this 4
+push constant 116
+eq
+if-goto IF_TRUE25
+goto IF_FALSE25
+label IF_TRUE25
+push this 3
+call Graphics.drawCloudEnd16 1
+pop temp 0
+goto IF_END25
+label IF_FALSE25
+push this 4
+push constant 117
+eq
+if-goto IF_TRUE26
+goto IF_FALSE26
+label IF_TRUE26
+push this 3
+call Graphics.drawCloudEnd17 1
+pop temp 0
+push pointer 0
+push constant 0
+call Cloud.reset 2
+pop temp 0
+label IF_FALSE26
+label IF_END25
+label IF_END24
+label IF_END23
+label IF_END22
+label IF_END21
+label IF_END20
+label IF_END19
+label IF_END18
+label IF_END17
+label IF_END16
+label IF_END15
+label IF_END14
+label IF_END13
+label IF_END12
+label IF_END11
+label IF_END10
+label IF_END9
+label IF_END8
+label IF_END7
+label IF_END6
+label IF_END5
+label IF_END4
+label IF_END3
+label IF_END2
+push this 1
+push this 3
+eq
+if-goto IF_TRUE27
+goto IF_FALSE27
+label IF_TRUE27
+push constant 100
+pop this 4
+push constant 0
+pop this 1
+label IF_FALSE27
+push this 4
+push constant 1
+add
+pop this 4
+push constant 1
+neg
+pop this 5
+label IF_FALSE1
+push this 5
+push constant 1
+add
+pop this 5
+push constant 0
+return
+function Cloud.reset 0
+push argument 0
+pop pointer 0
+push constant 100
+push constant 160
+call LCGRandom.randRange 2
+pop this 0
+push this 0
+push constant 32
+call Math.multiply 2
+pop this 3
+push argument 1
+push constant 0
+eq
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push static 0
+push constant 100
+push constant 350
+call LCGRandom.randRange 2
+add
+pop this 2
+goto IF_END0
+label IF_FALSE0
+push argument 1
+pop this 2
+push constant 150
+pop this 0
+label IF_END0
+push this 2
+pop static 0
+push this 3
+push this 2
+add
+pop this 1
+push constant 0
+pop this 4
+push constant 0
+pop this 5
+push constant 0
+return
+function Cloud.collision 0
+push argument 0
+pop pointer 0
+push this 2
+push constant 1
+add
+push argument 3
+gt
+push argument 1
+push this 2
+push constant 1
+add
+gt
+or
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+return
+label IF_FALSE0
+push this 0
+push constant 8
+add
+push argument 4
+gt
+push argument 2
+push this 0
+push constant 8
+add
+gt
+or
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 0
+return
+label IF_FALSE1
+push constant 0
+not
+return

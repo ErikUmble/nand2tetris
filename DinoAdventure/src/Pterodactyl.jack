@@ -1,0 +1,124 @@
+
+
+class Pterodactyl {
+	static int rightmost;
+
+	//field int height;
+	field int location;
+	field int destroy_location;
+	field int sprite_seq_pos;  // keep track of the position in the sequence of different sprite displays
+	
+	// top left corner of collision box
+	field int tl0x;
+	field int tl0y; 
+	
+	// bottom right corner of collision box
+	field int br0x;
+	field int br0y;
+	
+	constructor Pterodactyl new() {
+		let location = 0; // temp
+		do reset();
+		let rightmost = 30;
+		return this;
+	}
+	method void dispose() {
+		do Memory.deAlloc(this);
+		return;
+	}
+	function void decrement_rightmost() {
+		let rightmost = rightmost - 1;
+		if (rightmost < 28) {let rightmost = 28;}
+		return;
+	}
+	method void update() {
+		// skip the drawing if the Pterodactyl has is not on the screen yet
+		if (tl0x > 28) {
+			let location = location - 1;  // shifting over one block
+			let tl0x = tl0x - 1;
+			let br0x = br0x - 1;
+			return;
+		}
+		if (sprite_seq_pos = 0) {
+			do Graphics.drawPtyrPos0(location);
+			let location = location - 1;  // shifting over one block
+			let tl0x = tl0x - 1;
+			let br0x = br0x - 1;
+		}
+		else {if (sprite_seq_pos = 1) {
+			do Graphics.drawPtyrPos1(location);
+		}
+		else {if (sprite_seq_pos = 2) {
+			do Graphics.drawPtyrPos2(location);
+		}
+		else {if (sprite_seq_pos = 3) {
+			do Graphics.drawPtyrPos3(location);
+		}
+		else {if (sprite_seq_pos = 4) {
+			do Graphics.drawPtyrPos4(location);
+		}
+		else {if (sprite_seq_pos = 5) {
+			do Graphics.drawPtyrPos5(location);
+		}
+		else {if (sprite_seq_pos = 6) {
+			do Graphics.drawPtyrPos6(location);
+		}
+		else {if (sprite_seq_pos = 7) {
+			do Graphics.drawPtyrPos7(location);
+			let sprite_seq_pos = -1;
+		}}}}}}}}
+		if (location < destroy_location) { // passed the left edge of the screen on ground level
+			do reset();
+			// clear the remaining leftmost chunck
+			//do Graphics.erasePtyr(destroy_location); // no longer necessary
+		}
+		let sprite_seq_pos = sprite_seq_pos + 1;
+		
+		return;
+	}
+	method void reset() {
+		var int height_type; // hight to require crouch is: , height to walk under is: , ground level height is:
+		
+		// erase previous if it existed
+		if (location) {do Graphics.erasePtyr(location);}
+		
+		let height_type = LCGRandom.randRange(0, 9);
+		if (height_type < 7) {
+			let tl0y = 210; // require crouch hight
+		}
+		else {if (height_type = 9) {
+			let tl0y = 235; // require jump height
+		}
+		else {
+			let tl0y = 215; // optional movement height
+		}}
+		let tl0x = rightmost + LCGRandom.randRange(20, 1000); // starting x coordinate (in words)
+		
+		let br0x = tl0x + 1; // 1 word wide
+		let br0y = tl0y + 8; // 8 words tall
+
+		let destroy_location = (tl0y * 32) + 1;   // left edge of the row that this has as its base
+		let location = destroy_location + tl0x;  // we are starting near the end of the row
+		let sprite_seq_pos = -1;
+		return;
+	}
+	
+	method int collision(int tl1x, int tl1y, int br1x, int br1y) {
+		// given a top left corner coordinates and a bottom right corner coordinates, returns whether or not the rectangles intersect
+		
+		if (br0x = 4) {let br0x = 3;}  // just a little help to avoid colliding with the tail or unreasonable collision
+		
+		// if this is on the left of the other or vice versa
+		//if ((~(tl0x < br1x)) | (~(tl1x < br0x))) {return 0;} // this ignores collision within a single word
+		if (((tl0x > br1x)) | ((tl1x > br0x))) {return 0;}
+		
+		// if this is above the other rectangle or vice versa
+		//if ((~(tl0y < br1y)) | (~(tl1y < br0y))) {return 0;} // this ignores collision within a single word
+		if (((tl0y > br1y)) | ((tl1y > br0y))) {return 0;}
+		
+		// figure out the collision is with any of the lower half (which is a collision and positive return); otherwise return negative for springboarding
+		if (br1y > (tl0y + 8)) {return 1;} // bottom of player is below (>) halfway down the Pterodactyl
+		return -1;
+	}
+
+}

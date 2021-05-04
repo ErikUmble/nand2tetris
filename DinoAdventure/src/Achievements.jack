@@ -1,0 +1,151 @@
+/**
+Handles achievements and their messages
+The fourth row of text (rows y = [44 - 54]) is dedicated to achievement messages and is entirely cleared upon Achievements.clearMessage()
+The top right corner displays the number of achievements left.
+
+When the last achievement is complete, this enters endscreen (won the game)
+
+0: crouch mid-jump
+1: left/right arrow to change Trex jump velocity
+2: crash into cactus
+3: press ?
+4: 1000 points
+5: 50 jumps (not including repeated jumps by holding down a jump key)
+6: set the game speed with digit key
+7: Collide with a clouds
+8: land on the head of a Pterodactyls
+*/
+
+class Achievements {
+	static int num_achievements, achievements_left;
+	static Array achievements;
+	static Array messages;
+	
+	static int num_jumps;
+	static boolean game_ended;
+	
+	function void init() {
+		
+		let num_achievements = 9;
+		let achievements_left = num_achievements;
+		let achievements = Array.new(num_achievements);
+		let num_jumps = 0;
+		let game_ended = false;
+		
+		let messages = Array.new(num_achievements);
+		let messages[0] = "Who knew dinos could fly?";
+		let messages[1] = "So, you've found the jump boost, eh?";
+		let messages[2] = "Ouch! Don't let that happen again!";
+		let messages[3] = "Now you know the secrets; good luck!";
+		let messages[4] = "1000 points. Impressive.";
+		let messages[5] = "Gettin' bouncy";
+		let messages[6] = "Speed boost";
+		let messages[7] = "Head in the clouds";
+		let messages[8] = "Be careful; Pterodactyls don't like that!";
+		
+		do Achievements.writeAchievementsLeft();
+		return;
+	}
+	
+	function void writeAchievementsLeft() {
+		do Output.moveCursor(0, 38);
+		do Output.printString("Achievements remaining:");
+		do Output.moveCursor(0, 62);
+		do Output.printInt(achievements_left);
+		return;
+	}
+	
+	function boolean complete(int achievement) {
+	
+		// first check if it is the end of the game
+		// end the game if score > 1500 (achievement -1) and if there are no achievements_left and if we have not already ended the game
+		if ((achievement = -1) & (achievements_left = 0) & (~game_ended)) {
+			do Sys.wait(1000);
+			do Achievements.clearMessage();
+			do Endscreen.win();
+			let game_ended = true;
+		}
+		
+		// corner cases
+		if (achievement < 0) {return false;}
+		if (~(achievement < num_achievements)) {do Sys.error(2);}
+		if (achievements[achievement]) {return false;} // already complete
+		
+		
+		// specific achievement cases
+		if (achievement = 3) {do Achievements.displaySecrets();}
+		
+		else {if (achievement = 5) {
+			let num_jumps = num_jumps + 1;
+			if (~(num_jumps = 50)) {return false;} // did not just do the hundedth jump
+		}
+		
+		else {if (achievement = 2) {
+			do Achievements.clearLower(); //wipe the cacti
+		}
+		}}
+		
+		// completed achievement
+		let achievements[achievement] = true;
+		
+		do Achievements.clearMessage();
+		let achievements_left = achievements_left - 1;
+		do Output.moveCursor(0, 62);
+		do Output.printInt(achievements_left);
+		
+		do Output.moveCursor(4, 20);
+		do Output.printString(messages[achievement]);
+		
+		return true;
+	}
+	
+	function void clearMessage() {
+		var int addr;
+		let addr = 17792; //16384 + 44*32
+		
+		while (addr < 18144) { // < 16384 + 55*32
+			do Memory.poke(addr, 0);
+			let addr = addr + 1;
+		}	
+		return;
+	}
+	
+	function void clearLower() {
+		var int addr;
+		let addr = 17792; //16384 + 44*32
+		
+		while (addr < 24577) { // < 16384 + 256*32 + 1
+			do Memory.poke(addr, 0);
+			let addr = addr + 1;
+		}	
+		return;
+	}
+	function void displaySecrets() {
+		var int i;
+		var String completed;
+		let completed = "  <completed>";
+		
+		let i = 0;
+		while (i < num_achievements) {
+			do Output.moveCursor(6 + i, 10);
+			do Output.printString(messages[i]);
+			if (achievements[i]) {do Output.printString(completed);}
+			let i = i + 1;
+		}
+		do completed.dispose();
+		let completed = "Press any key to return to the game";
+		do Output.moveCursor(7 + i, 10);
+		do Output.printString(completed);
+		do completed.dispose();
+		
+		// wait for key release
+		while (~(Keyboard.keyPressed() = 0)) {}
+		
+		// wait for press key
+		while ((Keyboard.keyPressed() = 0)) {}
+		do Achievements.clearLower();
+		return;
+	}
+	
+
+}

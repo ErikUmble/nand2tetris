@@ -1,0 +1,768 @@
+function DinoGame.new 0
+push constant 24
+call Memory.alloc 1
+pop pointer 0
+push constant 7300
+call Trex.new 1
+pop this 2
+push constant 4
+pop this 3
+push constant 5
+pop this 5
+push this 2
+call Trex.collision_box_tly 1
+pop this 4
+push this 4
+push constant 32
+add
+pop this 6
+call Pterodactyl.new 0
+pop this 7
+call Pterodactyl.new 0
+pop this 8
+call Pterodactyl.new 0
+pop this 9
+call CactusCluster.new 0
+pop this 10
+call CactusCluster.new 0
+pop this 11
+call CactusCluster.new 0
+pop this 12
+call CactusCluster.new 0
+pop this 13
+call CactusCluster.new 0
+pop this 14
+push constant 27
+call Cloud.new 1
+pop this 15
+push constant 512
+call Cloud.new 1
+pop this 16
+push constant 0
+call Cloud.new 1
+pop this 17
+push constant 10
+pop this 1
+push this 1
+push constant 4
+sub
+pop this 0
+push constant 0
+pop this 18
+push constant 1
+neg
+pop this 19
+push constant 0
+pop this 20
+push constant 0
+pop this 21
+push argument 0
+pop this 22
+call Screen.clearScreen 0
+pop temp 0
+push constant 0
+push constant 0
+call Output.moveCursor 2
+pop temp 0
+push constant 12
+call String.new 1
+push constant 72
+call String.appendChar 2
+push constant 105
+call String.appendChar 2
+push constant 103
+call String.appendChar 2
+push constant 104
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 83
+call String.appendChar 2
+push constant 99
+call String.appendChar 2
+push constant 111
+call String.appendChar 2
+push constant 114
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 58
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+call Output.printString 1
+pop temp 0
+push constant 0
+push constant 12
+call Output.moveCursor 2
+pop temp 0
+push this 22
+call Output.printInt 1
+pop temp 0
+call Achievements.writeAchievementsLeft 0
+pop temp 0
+push constant 1
+push constant 0
+call Output.moveCursor 2
+pop temp 0
+push constant 7
+call String.new 1
+push constant 83
+call String.appendChar 2
+push constant 99
+call String.appendChar 2
+push constant 111
+call String.appendChar 2
+push constant 114
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 58
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+call Output.printString 1
+pop temp 0
+push constant 1
+push constant 7
+call Output.moveCursor 2
+pop temp 0
+push this 21
+call Output.printInt 1
+pop temp 0
+push pointer 0
+return
+function DinoGame.dispose 0
+push argument 0
+pop pointer 0
+push this 2
+call Trex.dispose 1
+pop temp 0
+push this 7
+call Pterodactyl.dispose 1
+pop temp 0
+push this 8
+call Pterodactyl.dispose 1
+pop temp 0
+push this 9
+call Pterodactyl.dispose 1
+pop temp 0
+push this 15
+call Cloud.dispose 1
+pop temp 0
+push this 16
+call Cloud.dispose 1
+pop temp 0
+push this 17
+call Cloud.dispose 1
+pop temp 0
+push this 10
+call CactusCluster.dispose 1
+pop temp 0
+push this 11
+call CactusCluster.dispose 1
+pop temp 0
+push this 12
+call CactusCluster.dispose 1
+pop temp 0
+push this 13
+call CactusCluster.dispose 1
+pop temp 0
+push this 14
+call CactusCluster.dispose 1
+pop temp 0
+push pointer 0
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+return
+function DinoGame.set_achievement_timeout 0
+push argument 0
+pop pointer 0
+push argument 1
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push argument 1
+pop this 19
+goto IF_END0
+label IF_FALSE0
+push constant 150
+pop this 19
+label IF_END0
+push this 1
+push constant 4
+sub
+pop this 0
+push constant 0
+return
+function DinoGame.check_input 1
+push argument 0
+pop pointer 0
+call Keyboard.keyPressed 0
+pop local 0
+push local 0
+push constant 32
+eq
+push local 0
+push constant 131
+eq
+or
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push this 2
+call Trex.jump 1
+pop temp 0
+push local 0
+push this 23
+eq
+not
+push this 2
+call Trex.jump 1
+push constant 5
+eq
+and
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 5
+call Achievements.complete 1
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push pointer 0
+push constant 0
+call DinoGame.set_achievement_timeout 2
+pop temp 0
+label IF_FALSE2
+label IF_FALSE1
+goto IF_END0
+label IF_FALSE0
+push local 0
+push constant 133
+eq
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push this 2
+call Trex.crouch 1
+pop temp 0
+goto IF_END3
+label IF_FALSE3
+push local 0
+push constant 81
+eq
+if-goto IF_TRUE4
+goto IF_FALSE4
+label IF_TRUE4
+push constant 0
+return
+goto IF_END4
+label IF_FALSE4
+push local 0
+push constant 130
+eq
+push this 23
+push constant 130
+eq
+not
+and
+if-goto IF_TRUE5
+goto IF_FALSE5
+label IF_TRUE5
+push constant 1
+neg
+call Trex.update_jump 1
+pop temp 0
+push constant 1
+call Achievements.complete 1
+if-goto IF_TRUE6
+goto IF_FALSE6
+label IF_TRUE6
+push pointer 0
+push constant 0
+call DinoGame.set_achievement_timeout 2
+pop temp 0
+label IF_FALSE6
+goto IF_END5
+label IF_FALSE5
+push local 0
+push constant 132
+eq
+push this 23
+push constant 132
+eq
+not
+and
+if-goto IF_TRUE7
+goto IF_FALSE7
+label IF_TRUE7
+push constant 1
+call Trex.update_jump 1
+pop temp 0
+push constant 1
+call Achievements.complete 1
+if-goto IF_TRUE8
+goto IF_FALSE8
+label IF_TRUE8
+push pointer 0
+push constant 0
+call DinoGame.set_achievement_timeout 2
+pop temp 0
+label IF_FALSE8
+goto IF_END7
+label IF_FALSE7
+push local 0
+push constant 63
+eq
+if-goto IF_TRUE9
+goto IF_FALSE9
+label IF_TRUE9
+push constant 3
+call Achievements.complete 1
+if-goto IF_TRUE10
+goto IF_FALSE10
+label IF_TRUE10
+push pointer 0
+push constant 0
+call DinoGame.set_achievement_timeout 2
+pop temp 0
+label IF_FALSE10
+goto IF_END9
+label IF_FALSE9
+push local 0
+push constant 47
+gt
+push local 0
+push constant 58
+lt
+and
+if-goto IF_TRUE11
+goto IF_FALSE11
+label IF_TRUE11
+push this 1
+push local 0
+push constant 48
+sub
+sub
+pop this 0
+push this 0
+push constant 1
+lt
+if-goto IF_TRUE12
+goto IF_FALSE12
+label IF_TRUE12
+push this 1
+push constant 4
+sub
+pop this 0
+label IF_FALSE12
+push constant 6
+call Achievements.complete 1
+if-goto IF_TRUE13
+goto IF_FALSE13
+label IF_TRUE13
+push pointer 0
+push constant 250
+call DinoGame.set_achievement_timeout 2
+pop temp 0
+label IF_FALSE13
+label IF_FALSE11
+label IF_END9
+label IF_END7
+label IF_END5
+label IF_END4
+label IF_END3
+label IF_END0
+push local 0
+pop this 23
+push constant 0
+not
+return
+function DinoGame.run 1
+push argument 0
+pop pointer 0
+label WHILE_EXP0
+push this 18
+not
+not
+if-goto WHILE_END0
+push pointer 0
+call DinoGame.check_input 1
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push this 2
+call Trex.update 1
+push constant 0
+eq
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 0
+call Achievements.complete 1
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push pointer 0
+push constant 0
+call DinoGame.set_achievement_timeout 2
+pop temp 0
+label IF_FALSE2
+label IF_FALSE1
+push this 7
+call Pterodactyl.update 1
+pop temp 0
+push this 8
+call Pterodactyl.update 1
+pop temp 0
+push this 9
+call Pterodactyl.update 1
+pop temp 0
+call Pterodactyl.decrement_rightmost 0
+pop temp 0
+push this 10
+call CactusCluster.update 1
+pop temp 0
+push this 11
+call CactusCluster.update 1
+pop temp 0
+push this 12
+call CactusCluster.update 1
+pop temp 0
+push this 13
+call CactusCluster.update 1
+pop temp 0
+push this 14
+call CactusCluster.update 1
+pop temp 0
+call CactusCluster.decrement_rightmost 0
+pop temp 0
+push this 15
+call Cloud.update 1
+pop temp 0
+push this 16
+call Cloud.update 1
+pop temp 0
+push this 17
+call Cloud.update 1
+pop temp 0
+call Cloud.decrement_rightmost 0
+pop temp 0
+push this 2
+call Trex.collision_box_tly 1
+pop this 4
+push this 4
+push constant 32
+add
+pop this 6
+push this 7
+push this 3
+push this 4
+push this 5
+push this 6
+call Pterodactyl.collision 5
+push this 8
+push this 3
+push this 4
+push this 5
+push this 6
+call Pterodactyl.collision 5
+add
+push this 9
+push this 3
+push this 4
+push this 5
+push this 6
+call Pterodactyl.collision 5
+add
+pop local 0
+push local 0
+push constant 0
+lt
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push constant 8
+call Achievements.complete 1
+if-goto IF_TRUE4
+goto IF_FALSE4
+label IF_TRUE4
+push pointer 0
+push constant 0
+call DinoGame.set_achievement_timeout 2
+pop temp 0
+label IF_FALSE4
+push this 2
+push constant 20
+neg
+call Trex.set_velocity 2
+pop temp 0
+push this 7
+push this 3
+push this 4
+push this 5
+push this 6
+call Pterodactyl.collision 5
+if-goto IF_TRUE5
+goto IF_FALSE5
+label IF_TRUE5
+push this 7
+call Pterodactyl.reset 1
+pop temp 0
+label IF_FALSE5
+push this 8
+push this 3
+push this 4
+push this 5
+push this 6
+call Pterodactyl.collision 5
+if-goto IF_TRUE6
+goto IF_FALSE6
+label IF_TRUE6
+push this 8
+call Pterodactyl.reset 1
+pop temp 0
+label IF_FALSE6
+push this 9
+push this 3
+push this 4
+push this 5
+push this 6
+call Pterodactyl.collision 5
+if-goto IF_TRUE7
+goto IF_FALSE7
+label IF_TRUE7
+push this 9
+call Pterodactyl.reset 1
+pop temp 0
+label IF_FALSE7
+goto IF_END3
+label IF_FALSE3
+push local 0
+push constant 0
+gt
+if-goto IF_TRUE8
+goto IF_FALSE8
+label IF_TRUE8
+push constant 0
+not
+pop this 18
+label IF_FALSE8
+label IF_END3
+push this 10
+push this 3
+push this 4
+push this 5
+push this 6
+call CactusCluster.collision 5
+push this 11
+push this 3
+push this 4
+push this 5
+push this 6
+call CactusCluster.collision 5
+or
+push this 12
+push this 3
+push this 4
+push this 5
+push this 6
+call CactusCluster.collision 5
+or
+push this 13
+push this 3
+push this 4
+push this 5
+push this 6
+call CactusCluster.collision 5
+or
+push this 14
+push this 3
+push this 4
+push this 5
+push this 6
+call CactusCluster.collision 5
+or
+if-goto IF_TRUE9
+goto IF_FALSE9
+label IF_TRUE9
+push constant 2
+call Achievements.complete 1
+not
+if-goto IF_TRUE10
+goto IF_FALSE10
+label IF_TRUE10
+push constant 0
+not
+pop this 18
+goto IF_END10
+label IF_FALSE10
+push this 10
+call CactusCluster.reset 1
+pop temp 0
+push this 11
+call CactusCluster.reset 1
+pop temp 0
+push this 12
+call CactusCluster.reset 1
+pop temp 0
+push this 13
+call CactusCluster.reset 1
+pop temp 0
+push this 14
+call CactusCluster.reset 1
+pop temp 0
+push pointer 0
+push constant 0
+call DinoGame.set_achievement_timeout 2
+pop temp 0
+label IF_END10
+label IF_FALSE9
+push this 15
+push this 3
+push this 4
+push this 5
+push this 6
+call Cloud.collision 5
+push this 16
+push this 3
+push this 4
+push this 5
+push this 6
+call Cloud.collision 5
+or
+push this 17
+push this 3
+push this 4
+push this 5
+push this 6
+call Cloud.collision 5
+or
+if-goto IF_TRUE11
+goto IF_FALSE11
+label IF_TRUE11
+push constant 7
+call Achievements.complete 1
+if-goto IF_TRUE12
+goto IF_FALSE12
+label IF_TRUE12
+push pointer 0
+push constant 0
+call DinoGame.set_achievement_timeout 2
+pop temp 0
+label IF_FALSE12
+label IF_FALSE11
+push this 0
+call Sys.wait 1
+pop temp 0
+goto IF_END0
+label IF_FALSE0
+push constant 0
+return
+label IF_END0
+push this 20
+push constant 3
+eq
+if-goto IF_TRUE13
+goto IF_FALSE13
+label IF_TRUE13
+push constant 0
+pop this 20
+push this 21
+push constant 1
+add
+pop this 21
+push constant 1
+push constant 7
+call Output.moveCursor 2
+pop temp 0
+push this 21
+call Output.printInt 1
+pop temp 0
+push this 21
+push constant 500
+eq
+push this 21
+push constant 1000
+eq
+or
+push this 21
+push constant 1500
+eq
+or
+push this 21
+push constant 2000
+eq
+or
+if-goto IF_TRUE14
+goto IF_FALSE14
+label IF_TRUE14
+push this 1
+push constant 1
+sub
+pop this 1
+push this 1
+push constant 4
+sub
+pop this 0
+push this 21
+push constant 1000
+eq
+if-goto IF_TRUE15
+goto IF_FALSE15
+label IF_TRUE15
+push constant 4
+call Achievements.complete 1
+pop temp 0
+push pointer 0
+push constant 0
+call DinoGame.set_achievement_timeout 2
+pop temp 0
+label IF_FALSE15
+label IF_FALSE14
+push this 21
+push constant 1499
+gt
+if-goto IF_TRUE16
+goto IF_FALSE16
+label IF_TRUE16
+push constant 1
+neg
+call Achievements.complete 1
+pop temp 0
+label IF_FALSE16
+goto IF_END13
+label IF_FALSE13
+push this 20
+push constant 1
+add
+pop this 20
+label IF_END13
+push this 19
+push constant 0
+eq
+if-goto IF_TRUE17
+goto IF_FALSE17
+label IF_TRUE17
+call Achievements.clearMessage 0
+pop temp 0
+label IF_FALSE17
+push this 19
+push constant 1
+sub
+pop this 19
+goto WHILE_EXP0
+label WHILE_END0
+push this 21
+push this 22
+gt
+if-goto IF_TRUE18
+goto IF_FALSE18
+label IF_TRUE18
+push this 21
+return
+label IF_FALSE18
+push this 22
+return

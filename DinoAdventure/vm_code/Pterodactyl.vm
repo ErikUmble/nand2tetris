@@ -1,0 +1,306 @@
+function Pterodactyl.new 0
+push constant 7
+call Memory.alloc 1
+pop pointer 0
+push constant 0
+pop this 0
+push pointer 0
+call Pterodactyl.reset 1
+pop temp 0
+push constant 30
+pop static 0
+push pointer 0
+return
+function Pterodactyl.dispose 0
+push argument 0
+pop pointer 0
+push pointer 0
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+return
+function Pterodactyl.decrement_rightmost 0
+push static 0
+push constant 1
+sub
+pop static 0
+push static 0
+push constant 28
+lt
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 28
+pop static 0
+label IF_FALSE0
+push constant 0
+return
+function Pterodactyl.update 0
+push argument 0
+pop pointer 0
+push this 3
+push constant 28
+gt
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push this 0
+push constant 1
+sub
+pop this 0
+push this 3
+push constant 1
+sub
+pop this 3
+push this 5
+push constant 1
+sub
+pop this 5
+push constant 0
+return
+label IF_FALSE0
+push this 2
+push constant 0
+eq
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push this 0
+call Graphics.drawPtyrPos0 1
+pop temp 0
+push this 0
+push constant 1
+sub
+pop this 0
+push this 3
+push constant 1
+sub
+pop this 3
+push this 5
+push constant 1
+sub
+pop this 5
+goto IF_END1
+label IF_FALSE1
+push this 2
+push constant 1
+eq
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push this 0
+call Graphics.drawPtyrPos1 1
+pop temp 0
+goto IF_END2
+label IF_FALSE2
+push this 2
+push constant 2
+eq
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push this 0
+call Graphics.drawPtyrPos2 1
+pop temp 0
+goto IF_END3
+label IF_FALSE3
+push this 2
+push constant 3
+eq
+if-goto IF_TRUE4
+goto IF_FALSE4
+label IF_TRUE4
+push this 0
+call Graphics.drawPtyrPos3 1
+pop temp 0
+goto IF_END4
+label IF_FALSE4
+push this 2
+push constant 4
+eq
+if-goto IF_TRUE5
+goto IF_FALSE5
+label IF_TRUE5
+push this 0
+call Graphics.drawPtyrPos4 1
+pop temp 0
+goto IF_END5
+label IF_FALSE5
+push this 2
+push constant 5
+eq
+if-goto IF_TRUE6
+goto IF_FALSE6
+label IF_TRUE6
+push this 0
+call Graphics.drawPtyrPos5 1
+pop temp 0
+goto IF_END6
+label IF_FALSE6
+push this 2
+push constant 6
+eq
+if-goto IF_TRUE7
+goto IF_FALSE7
+label IF_TRUE7
+push this 0
+call Graphics.drawPtyrPos6 1
+pop temp 0
+goto IF_END7
+label IF_FALSE7
+push this 2
+push constant 7
+eq
+if-goto IF_TRUE8
+goto IF_FALSE8
+label IF_TRUE8
+push this 0
+call Graphics.drawPtyrPos7 1
+pop temp 0
+push constant 1
+neg
+pop this 2
+label IF_FALSE8
+label IF_END7
+label IF_END6
+label IF_END5
+label IF_END4
+label IF_END3
+label IF_END2
+label IF_END1
+push this 0
+push this 1
+lt
+if-goto IF_TRUE9
+goto IF_FALSE9
+label IF_TRUE9
+push pointer 0
+call Pterodactyl.reset 1
+pop temp 0
+label IF_FALSE9
+push this 2
+push constant 1
+add
+pop this 2
+push constant 0
+return
+function Pterodactyl.reset 1
+push argument 0
+pop pointer 0
+push this 0
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push this 0
+call Graphics.erasePtyr 1
+pop temp 0
+label IF_FALSE0
+push constant 0
+push constant 9
+call LCGRandom.randRange 2
+pop local 0
+push local 0
+push constant 7
+lt
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 210
+pop this 4
+goto IF_END1
+label IF_FALSE1
+push local 0
+push constant 9
+eq
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push constant 235
+pop this 4
+goto IF_END2
+label IF_FALSE2
+push constant 215
+pop this 4
+label IF_END2
+label IF_END1
+push static 0
+push constant 20
+push constant 1000
+call LCGRandom.randRange 2
+add
+pop this 3
+push this 3
+push constant 1
+add
+pop this 5
+push this 4
+push constant 8
+add
+pop this 6
+push this 4
+push constant 32
+call Math.multiply 2
+push constant 1
+add
+pop this 1
+push this 1
+push this 3
+add
+pop this 0
+push constant 1
+neg
+pop this 2
+push constant 0
+return
+function Pterodactyl.collision 0
+push argument 0
+pop pointer 0
+push this 5
+push constant 4
+eq
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 3
+pop this 5
+label IF_FALSE0
+push this 3
+push argument 3
+gt
+push argument 1
+push this 5
+gt
+or
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 0
+return
+label IF_FALSE1
+push this 4
+push argument 4
+gt
+push argument 2
+push this 6
+gt
+or
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push constant 0
+return
+label IF_FALSE2
+push argument 4
+push this 4
+push constant 8
+add
+gt
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push constant 1
+return
+label IF_FALSE3
+push constant 1
+neg
+return

@@ -1,0 +1,29 @@
+
+
+/** Main */
+class Main {
+	function void main() {
+		var int game_state; // true while the game should keep playing, false when quit
+		var DinoGame game;
+		
+		// initialize randomness
+		do LCGRandom.setSeed(Math.abs(Startscreen.go()));
+		
+		let game = DinoGame.new(0);
+		
+		// initialize achievements
+		do Achievements.init();
+		
+		let game_state = game.run(); 
+		while (~(game_state = 0)) {
+			if (Endscreen.crash()) { // if the user wants to play again, endscreen.go() returns true
+				do game.dispose();
+				let game = DinoGame.new(game_state); // pass in previous game_state (score)
+				let game_state = game.run();
+			}
+			else {let game_state = 0;}
+		}
+		do game.dispose();
+		return;
+	}
+}

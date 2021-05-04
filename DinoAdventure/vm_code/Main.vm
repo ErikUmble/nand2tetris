@@ -1,0 +1,45 @@
+function Main.main 2
+call Startscreen.go 0
+call Math.abs 1
+call LCGRandom.setSeed 1
+pop temp 0
+push constant 0
+call DinoGame.new 1
+pop local 1
+call Achievements.init 0
+pop temp 0
+push local 1
+call DinoGame.run 1
+pop local 0
+label WHILE_EXP0
+push local 0
+push constant 0
+eq
+not
+not
+if-goto WHILE_END0
+call Endscreen.crash 0
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push local 1
+call DinoGame.dispose 1
+pop temp 0
+push local 0
+call DinoGame.new 1
+pop local 1
+push local 1
+call DinoGame.run 1
+pop local 0
+goto IF_END0
+label IF_FALSE0
+push constant 0
+pop local 0
+label IF_END0
+goto WHILE_EXP0
+label WHILE_END0
+push local 1
+call DinoGame.dispose 1
+pop temp 0
+push constant 0
+return

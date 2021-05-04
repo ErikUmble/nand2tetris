@@ -1,0 +1,93 @@
+
+class Endscreen {
+	static String win_prompt;
+	
+	function boolean crash() {
+		var boolean break;
+		var int key;
+		var String str;
+		
+		// Add screen prompt
+		let str = "Press space to play again, or press q to quit"; 
+		do Output.moveCursor(10, 10);
+		do Output.printString(str);
+		do str.dispose();
+		
+		// first wait until user stops pressing a key
+		while (~(Keyboard.keyPressed() = 0)) {}
+		do Sys.wait(100);
+		// Get response
+		while (~break) {
+			let key = Keyboard.keyPressed();
+			if ((key = 32) | (key = 131) | (key = 133) | (key = 81)) {
+				let break = true;
+			}
+		}
+		if (key = 81) {  // Q to quit
+			return false;
+		}
+		return true;
+	}
+	
+	function void win() {
+		var boolean break;
+		var int key;
+		
+		// end graphics
+		var Trex trex;
+		var Cloud cloud0;
+		var Cloud cloud1;
+		var Cloud cloud2;
+		let trex = Trex.new(0);
+		let cloud0 = Cloud.new(27);
+		let cloud1 = Cloud.new(512);
+		let cloud2 = Cloud.new(0);
+		
+		//if (win_prompt) {do win_prompt.dispose();} //unnecessary since the end only happens once
+		let win_prompt = "Press space to keep playing, or press q to quit";
+		
+		// clear previous screen
+		do Achievements.clearLower();
+		
+		
+		// first wait until user stops pressing a key (updating graphics meanwhile)
+		while (~(Keyboard.keyPressed() = 0)) {
+			do Endscreen.update_win_screen(trex, cloud0, cloud1, cloud2);
+		}
+		do Sys.wait(100);
+		
+		// wait for response (updating graphics meanwhile)
+		while (~break) {
+			let key = Keyboard.keyPressed();
+			if ((key = 32) | (key = 131) | (key = 133) | (key = 81)) {
+				let break = true;
+			}
+			do Endscreen.update_win_screen(trex, cloud0, cloud1, cloud2);
+			do Sys.wait(10);
+		}
+		if (key = 81) {  // Q to quit
+			do Sys.exit();
+			return;
+		}
+		do trex.dispose();
+		do cloud0.dispose();
+		do cloud1.dispose();
+		do cloud2.dispose();
+		
+		do Achievements.clearLower();
+		return;	}
+		
+	function void update_win_screen(Trex trex, Cloud cloud0, Cloud cloud1, Cloud cloud2) {
+		do trex.update();
+		do cloud0.update();
+		do cloud1.update();
+		do cloud2.update();
+		
+		// Maintain screen prompt
+		do Output.moveCursor(12, 10);
+		do Output.printString(win_prompt);
+		
+		do Graphics.writeYouWin(2826); // 2816 + 10 = (32 * 8 * 11) + 10 = (8, 10) in text coordinates
+		return;
+	}
+}

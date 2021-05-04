@@ -1,0 +1,153 @@
+
+class Cloud {
+	static int rightmost;
+
+	field int height;
+	field int location;
+	field int x_coord;
+	field int destroy_location;
+	field int sprite_seq_pos;  // keep track of the position in the sequence of different sprite displays
+	field int clock;
+	
+	
+	constructor Cloud new(int x) {
+		do reset(x);
+		let rightmost = 27;
+		return this;
+	}
+	method void dispose() {
+		do Memory.deAlloc(this);
+		return;
+	}
+	function void decrement_rightmost() {
+		let rightmost = rightmost - 1;
+		if (rightmost < 28) {let rightmost = 28;}
+		return;
+	}
+	method void update() {
+		// skip the drawing if the Pterodactyl has is not on the screen yet
+		if (x_coord > 27) {
+			let location = location - 1;  // shifting over one block
+			let x_coord = x_coord - 1;
+			return;
+		}
+		// only do the update on ever third clock cycle
+		if (clock = 3) {
+			if (sprite_seq_pos = 0) {
+				do Graphics.drawCloudPos8(location);
+				let location = location - 1;  // shifting over one block
+				let x_coord = x_coord - 1;
+			}
+			else {if (sprite_seq_pos = 1) {
+				do Graphics.drawCloudPos1(location);
+			}
+			else {if (sprite_seq_pos = 2) {
+				do Graphics.drawCloudPos2(location);
+			}
+			else {if (sprite_seq_pos = 3) {
+				do Graphics.drawCloudPos3(location);
+			}
+			else {if (sprite_seq_pos = 4) {
+				do Graphics.drawCloudPos4(location);
+			}
+			else {if (sprite_seq_pos = 5) {
+				do Graphics.drawCloudPos5(location);
+			}
+			else {if (sprite_seq_pos = 6) {
+				do Graphics.drawCloudPos6(location);
+			}
+			else {if (sprite_seq_pos = 7) {
+				do Graphics.drawCloudPos7(location);
+				let sprite_seq_pos = -1;
+			}
+				
+			else {if (sprite_seq_pos = 101) {
+				do Graphics.drawCloudEnd1(destroy_location);
+			}
+			else {if (sprite_seq_pos = 102) {
+				do Graphics.drawCloudEnd2(destroy_location);
+			}
+			else {if (sprite_seq_pos = 103) {
+				do Graphics.drawCloudEnd3(destroy_location);
+			}
+			else {if (sprite_seq_pos = 103) {
+				do Graphics.drawCloudEnd4(destroy_location);
+			}
+			else {if (sprite_seq_pos = 105) {
+				do Graphics.drawCloudEnd5(destroy_location);
+			}
+			else {if (sprite_seq_pos = 106) {
+				do Graphics.drawCloudEnd6(destroy_location);
+			}
+			else {if (sprite_seq_pos = 107) {
+				do Graphics.drawCloudEnd7(destroy_location);
+			}
+			else {if (sprite_seq_pos = 108) {
+				do Graphics.drawCloudEnd8(destroy_location);
+			}
+			else {if (sprite_seq_pos = 109) {
+				do Graphics.drawCloudEnd9(destroy_location);
+			}
+			else {if (sprite_seq_pos = 110) {
+				do Graphics.drawCloudEnd10(destroy_location);
+			}
+			else {if (sprite_seq_pos = 111) {
+				do Graphics.drawCloudEnd11(destroy_location);
+			}
+			else {if (sprite_seq_pos = 112) {
+				do Graphics.drawCloudEnd12(destroy_location);
+			}
+			else {if (sprite_seq_pos = 113) {
+				do Graphics.drawCloudEnd13(destroy_location);
+			}
+			else {if (sprite_seq_pos = 114) {
+				do Graphics.drawCloudEnd14(destroy_location);
+			}
+			else {if (sprite_seq_pos = 115) {
+				do Graphics.drawCloudEnd15(destroy_location);
+			}
+			else {if (sprite_seq_pos = 116) {
+				do Graphics.drawCloudEnd16(destroy_location);
+			}
+			else {if (sprite_seq_pos = 117) {
+				do Graphics.drawCloudEnd17(destroy_location);
+				do reset(0);
+			}}}}}}}}}}}}}}}}}}}}}}}}}
+			if (location = (destroy_location)) { // passed the left edge of the screen on ground level
+				let sprite_seq_pos = 100;
+				let location = 0;  // set the base to draw the end sequence
+			}
+			let sprite_seq_pos = sprite_seq_pos + 1;
+			let clock = -1;
+		}
+		
+		let clock = clock + 1;
+		
+		return;
+	}
+	method void reset(int x) {
+		let height = LCGRandom.randRange(100, 160);
+		let destroy_location = (height * 32);
+		if (x = 0) {
+			let x_coord = rightmost + LCGRandom.randRange(100, 350);
+		}
+		// if we are given a starting coordinate
+		else {let x_coord = x; let height = 150;}
+		
+		let rightmost = x_coord;
+		let location = destroy_location + x_coord;  // we are starting near the end of the row
+		let sprite_seq_pos = 0;
+		let clock = 0;
+		return;
+	}
+	
+	method boolean collision(int tl1x, int tl1y, int br1x, int br1y) {
+		// given a top left corner coordinates and a bottom right corner coordinates, returns whether or not the rectangles intersect
+		
+		// using (x_coord + 1), height + 8) be cloud center coordinate
+		if ((((x_coord + 1) > br1x)) | ((tl1x > (x_coord + 1)))) {return false;}
+		if ((((height + 8) > br1y)) | ((tl1y > (height + 8)))) {return false;}
+		
+		return true;
+	}
+}

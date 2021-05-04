@@ -1,0 +1,267 @@
+/**
+* DinoGame 
+* DinoGameObject.run returns score when the player crashes, and 0 (false) when the player quits (q)
+*/
+class DinoGame {
+	field int delay;
+	field int absolute_delay;
+	
+	field Trex player;
+	field int player_tlx;
+	field int player_tly;
+	field int player_brx;
+	field int player_bry;
+	
+	field Pterodactyl flying0;
+	field Pterodactyl flying1;
+	field Pterodactyl flying2;
+	
+	field CactusCluster cactus0;
+	field CactusCluster cactus1;
+	field CactusCluster cactus2;
+	field CactusCluster cactus3;
+	field CactusCluster cactus4;
+	
+	field Cloud cloud0;
+	field Cloud cloud1;
+	field Cloud cloud2;
+	field boolean crashed;
+	
+	
+	field int achievement_timeout_cycles;
+	field int clock;
+	field int score;
+	field int high_score;
+	field int last_cycle_key;
+	
+	constructor DinoGame new(int highest_score) {
+		let player = Trex.new(7300);
+		let player_tlx = 4;
+		let player_brx = 5;
+		let player_tly = player.collision_box_tly();
+		let player_bry = player_tly + 32;
+		
+		let flying0 = Pterodactyl.new();
+		let flying1 = Pterodactyl.new();
+		let flying2 = Pterodactyl.new();
+		
+		let cactus0 = CactusCluster.new();
+		let cactus1 = CactusCluster.new();
+		let cactus2 = CactusCluster.new();
+		let cactus3 = CactusCluster.new();
+		let cactus4 = CactusCluster.new();
+		
+		let cloud0 = Cloud.new(27);
+		let cloud1 = Cloud.new(512);
+		let cloud2 = Cloud.new(0);
+		
+		let absolute_delay = 10;
+		let delay = absolute_delay - 4;
+		let crashed = false;
+		
+		let achievement_timeout_cycles = -1;
+		let clock = 0;
+		let score = 0;
+		let high_score = highest_score;
+		
+		// setup screen
+		do Screen.clearScreen();
+		do Output.moveCursor(0,0);
+		do Output.printString("High Score: ");
+		do Output.moveCursor(0,12);
+		do Output.printInt(high_score);
+		
+		do Achievements.writeAchievementsLeft();
+		
+		do Output.moveCursor(1,0);
+		do Output.printString("Score: ");
+		do Output.moveCursor(1,7);
+		do Output.printInt(score);
+		// ground
+		/*do Screen.setColor(true);
+		do Screen.drawLine(0, 244, 511, 244);*/
+		
+		return this;
+	}
+	method void dispose() {
+		do player.dispose();
+		
+		do flying0.dispose();
+		do flying1.dispose();
+		do flying2.dispose();
+		
+		do cloud0.dispose();
+		do cloud1.dispose();
+		do cloud2.dispose();
+		
+		do cactus0.dispose();
+		do cactus1.dispose();
+		do cactus2.dispose();
+		do cactus3.dispose();
+		do cactus4.dispose();
+		
+		do Memory.deAlloc(this);
+		return;
+	}
+	method void set_achievement_timeout(int duration_cycles) {
+		/* if duration_cycles == 0, this uses default duration */ 
+		if (duration_cycles) {let achievement_timeout_cycles = duration_cycles;}
+		else {let achievement_timeout_cycles = 150;}
+		let delay = absolute_delay - 4; // reset delay if necessary
+		return;
+	}
+	method boolean check_input() {
+		var int key;
+		let key = Keyboard.keyPressed();
+
+		if ((key = 32) | (key = 131)) { // space bar or up arrow to jump
+			do player.jump();
+			
+			// only works toward jump achievement if user is not holding down (and if player.jump returns that the player was jumping from the ground level
+			if (~(key = last_cycle_key) & (player.jump() = 5)) { 
+				if (Achievements.complete(5)) {do set_achievement_timeout(0);}
+			}
+		}
+		else {if (key = 133) { // down arrow to crouch
+			do player.crouch();
+		}
+		else {if (key = 81) {  // Q to quit
+			return false;
+		}
+		else {if ((key = 130) & ~(last_cycle_key = 130))  { // left (make sure not to update this multiple times per key press)
+			do Trex.update_jump(-1);
+			if (Achievements.complete(1)) {do set_achievement_timeout(0);}
+		}
+		else {if ((key = 132) & ~(last_cycle_key = 132)) { // right (make sure not to update this multiple times per key press)
+			do Trex.update_jump(1);
+			if (Achievements.complete(1)) {do set_achievement_timeout(0);}
+			
+		}
+		else {if (key = 63) { // ?
+			if (Achievements.complete(3)) {do set_achievement_timeout(0);}
+		}
+		else {if ((key > 47) & (key < 58)) { // digit key
+			let delay = absolute_delay - (key - 48); 
+			if (delay < 1) {let delay = absolute_delay - 4;}
+			if (Achievements.complete(6)) {do set_achievement_timeout(250);}
+		}
+		}}}}}}
+		let last_cycle_key = key;
+		return true;
+	}
+	method int run() {
+		var int temp;
+		while (~crashed) {
+			if (check_input()) {
+				// update each object's state
+				if (player.update() = 0) { // flying dino return
+					if (Achievements.complete(0)) {do set_achievement_timeout(0);}
+				}
+				
+				do flying0.update();
+				do flying1.update();
+				do flying2.update();
+				do Pterodactyl.decrement_rightmost();
+				
+				do cactus0.update();
+				do cactus1.update();
+				do cactus2.update();
+				do cactus3.update();
+				do cactus4.update();
+				do CactusCluster.decrement_rightmost();
+				
+				do cloud0.update();
+				do cloud1.update();
+				do cloud2.update();
+				do Cloud.decrement_rightmost();
+				
+				// check for collisions -> check each object individually for achievements
+				let player_tly = player.collision_box_tly();
+				let player_bry = player_tly + 32;
+				
+				// check Pterodactyl collisions and springboarding
+				// Since the player can only be colliding (nonzero) with one flying at a time, we can sum the collision returns to get overall effect with springboarding as priority with -2 compared with +1
+				let temp =  flying0.collision(player_tlx, player_tly, player_brx, player_bry) +
+							flying1.collision(player_tlx, player_tly, player_brx, player_bry) +
+							flying2.collision(player_tlx, player_tly, player_brx, player_bry);
+				
+				if (temp < 0) { // springboarding
+					if (Achievements.complete(8)) {do set_achievement_timeout(0);}
+					// else {let crashed = true;} // uncomment this for only one springboarding per game (but then, swap out the placement of 'do Achievements.clearLower();')
+					
+					do player.set_velocity(-20);
+					
+					// reset the poor flying
+					if (flying0.collision(player_tlx, player_tly, player_brx, player_bry)) {do flying0.reset();}
+					if (flying1.collision(player_tlx, player_tly, player_brx, player_bry)) {do flying1.reset();}
+					if (flying2.collision(player_tlx, player_tly, player_brx, player_bry)) {do flying2.reset();}
+					
+				}
+				else {if (temp > 0) { // crashed
+					let crashed = true;
+				}}
+				
+				if (cactus0.collision(player_tlx, player_tly, player_brx, player_bry) | 
+					cactus1.collision(player_tlx, player_tly, player_brx, player_bry) |
+					cactus2.collision(player_tlx, player_tly, player_brx, player_bry) |
+					cactus3.collision(player_tlx, player_tly, player_brx, player_bry) |
+					cactus4.collision(player_tlx, player_tly, player_brx, player_bry)
+					)
+					{
+						if (~(Achievements.complete(2))) {let crashed = true;}
+						else {
+							//reset all the cacti 
+							do cactus0.reset();
+							do cactus1.reset();
+							do cactus2.reset();
+							do cactus3.reset();
+							do cactus4.reset();
+							
+							// achievement will clear lower
+							
+							do set_achievement_timeout(0);
+						}
+					}
+			
+				// check for cloud collision with just the head collision box
+				if (cloud0.collision(player_tlx, player_tly, player_brx, player_bry) | 
+					cloud1.collision(player_tlx, player_tly, player_brx, player_bry) |
+					cloud2.collision(player_tlx, player_tly, player_brx, player_bry))
+					{
+						if (Achievements.complete(7)) {do set_achievement_timeout(0);}
+					}
+				do Sys.wait(delay);  // game speed delay
+				
+			}
+			else {
+				return 0; // quit
+			}
+			if (clock = 3) { // update and display score ever 4 cycles
+				let clock = 0; 
+				let score = score + 1;
+				do Output.moveCursor(1,7);
+				do Output.printInt(score);
+				
+				// update delay if necessary
+				if ((score = 500) | (score = 1000) | (score = 1500) | (score = 2000)) {
+					let absolute_delay = absolute_delay - 1;
+					let delay = absolute_delay - 4;
+					
+					// check for achievement
+					if (score = 1000) {do Achievements.complete(4); do set_achievement_timeout(0);}
+				}
+				
+				// if score > 1500, see if game is over
+				if (score > 1499) {do Achievements.complete(-1);}
+			}
+			else {let clock = clock + 1;}
+			
+			if (achievement_timeout_cycles = 0) {do Achievements.clearMessage();}
+			let achievement_timeout_cycles = achievement_timeout_cycles - 1;
+			
+		}
+		// do endScreen
+		if (score > high_score) {return score;}
+		return high_score;
+	}
+}

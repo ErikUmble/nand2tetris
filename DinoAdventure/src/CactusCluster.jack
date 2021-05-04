@@ -1,0 +1,230 @@
+
+
+class CactusCluster {
+	static int rightmost;
+
+	field int height;
+	field int width;
+	field int location;  // keep track of location using left_x_pos
+	field int destroy_location;
+	field int sprite;  // distinguish between different types of cacti
+	field int sprite_seq_pos;
+	
+	// top left corner of collision box
+	field int tl0x;
+	field int tl0y; 
+	
+	// bottom right corner of collision box
+	field int br0x;
+	field int br0y;
+	
+	constructor CactusCluster new() {
+		do reset();
+		if (~rightmost) {let rightmost = 30;}
+		
+		return this;
+	}
+	function void decrement_rightmost() {
+		let rightmost = rightmost - 1;
+		if (rightmost < 30) {let rightmost = 29;}
+		return;
+	}
+	method void dispose() {
+		do Memory.deAlloc(this);
+		return;
+	}
+	method int x() {
+		return br0x;
+		//return location;
+	}
+	method void update() {
+		// skip the drawing if the cactus has is not on the screen yet
+		if (tl0x > 30) {
+			let location = location - 1;  // shifting over one block
+			let tl0x = tl0x - 1;
+			let br0x = br0x - 1;
+			return;
+		}
+		if (sprite = 1) {
+			if (sprite_seq_pos = 1) {
+				do Graphics.drawCactus1Pos1(location);
+			}
+			else {if (sprite_seq_pos = 2) {
+				do Graphics.drawCactus1Pos2(location);
+			}
+			else {if (sprite_seq_pos = 3) {
+				do Graphics.drawCactus1Pos3(location);
+			}
+			else {if (sprite_seq_pos = 4) {
+				do Graphics.drawCactus1Pos4(location);
+			}
+			else {if (sprite_seq_pos = 5) {
+				do Graphics.drawCactus1Pos5(location);
+			}
+			else {if (sprite_seq_pos = 6) {
+				do Graphics.drawCactus1Pos6(location);
+			}
+			else {if (sprite_seq_pos = 7) {
+				do Graphics.drawCactus1Pos7(location);
+			}
+			else {if (sprite_seq_pos = 8) {
+				do Graphics.drawCactus1Pos8(location);
+				let location = location - 1;  // shifting over one block
+				let tl0x = tl0x - 1;
+				let br0x = br0x - 1;
+				let sprite_seq_pos = 0;
+			}}}}}}}}
+		}
+		else {if (sprite = 2) {
+			if (sprite_seq_pos = 1) {
+				do Graphics.drawCactus2Pos1(location);
+				
+			}
+			else {if (sprite_seq_pos = 2) {
+				do Graphics.drawCactus2Pos2(location);
+			}
+			else {if (sprite_seq_pos = 3) {
+				do Graphics.drawCactus2Pos3(location);
+			}
+			else {if (sprite_seq_pos = 4) {
+				do Graphics.drawCactus2Pos4(location);
+			}
+			else {if (sprite_seq_pos = 5) {
+				do Graphics.drawCactus2Pos5(location);
+			}
+			else {if (sprite_seq_pos = 6) {
+				do Graphics.drawCactus2Pos6(location);
+			}
+			else {if (sprite_seq_pos = 7) {
+				do Graphics.drawCactus2Pos7(location);
+				
+			}
+			else {if (sprite_seq_pos = 8) {
+				do Graphics.drawCactus2Pos8(location);
+				let location = location - 1;  // shifting over one block
+				let tl0x = tl0x - 1;
+				let br0x = br0x - 1;
+				
+				let sprite_seq_pos = 0;
+			}}}}}}}}
+		}
+		else {if (sprite = -2) {
+			if (sprite_seq_pos = 1) {
+				do Graphics.drawCactus2EndPos1(location);
+			}
+			else {if (sprite_seq_pos = 2) {
+				do Graphics.drawCactus2EndPos2(location);
+			}
+			else {if (sprite_seq_pos = 3) {
+				do Graphics.drawCactus2EndPos3(location);
+			}
+			else {if (sprite_seq_pos = 4) {
+				do Graphics.drawCactus2EndPos4(location);
+			}
+			else {if (sprite_seq_pos = 5) {
+				do Graphics.drawCactus2EndPos5(location);
+			}
+			else {if (sprite_seq_pos = 6) {
+				do Graphics.drawCactus2EndPos6(location);
+			}
+			else {if (sprite_seq_pos = 7) {
+				do Graphics.drawCactus2EndPos7(location);
+			}
+			else {if (sprite_seq_pos = 8) {
+				do Graphics.drawCactus2EndPos8(location);
+			}
+			else {if (sprite_seq_pos = 9) {
+				do Graphics.drawCactus2EndPos9(location);
+			}
+			else {if (sprite_seq_pos = 10) {
+				do Graphics.drawCactus2EndPos10(location);
+			}
+			else {if (sprite_seq_pos = 11) {
+				do Graphics.drawCactus2EndPos11(location);
+			}
+			else {if (sprite_seq_pos = 12) {
+				do Graphics.drawCactus2EndPos12(location);
+			}
+			else {if (sprite_seq_pos = 13) {
+				do Graphics.drawCactus2EndPos13(location);
+				let sprite_seq_pos = 0;
+				do reset();
+			}
+			}}}}}}}}}}}}
+		}
+		else {if (sprite = -1) {
+			if (sprite_seq_pos = 1) {
+				do Graphics.Cactus1End1(location);
+			}
+			else {if (sprite_seq_pos = 2) {
+				do Graphics.Cactus1End2(location);
+			}
+			else {if (sprite_seq_pos = 3) {
+				do Graphics.Cactus1End3(location);
+			}
+			else {if (sprite_seq_pos = 4) {
+				do Graphics.Cactus1End4(location);
+			}
+			else {if (sprite_seq_pos = 5) {
+				do Graphics.Cactus1End5(location);
+			}
+			else {if (sprite_seq_pos = 6) {
+				do Graphics.Cactus1End6(location);
+				let sprite_seq_pos = 0;
+				do reset();
+			}}}}}}}
+		}
+		}}
+		
+		if (location = destroy_location & sprite > 0) { // passed the left edge of the screen on ground level
+			// begin the end process
+			let sprite_seq_pos = 0;
+			let br0x = 0;
+			let sprite = -sprite;
+			//let location = location - 1;
+		}
+		let sprite_seq_pos = sprite_seq_pos + 1;
+
+		return;
+	}
+	method void reset() {
+		let sprite = LCGRandom.randRange(1,2);
+		if (sprite = 1) {
+			let height = 21;
+			let width = 1; // 16 is the width in pixels of Cactus1
+		}
+		else {if (sprite = 2) {
+			let height = 16;
+			let width = 2; // 26 is the width in pixels of Cactus2 (but rounding down for the sake of collisions)
+		}}
+		
+		let tl0y = 244 - height;
+		let tl0x = rightmost + LCGRandom.randRange(20, 400); // put the next cactus a random amount beyond the current rightmost cactus (it must be at least 16 beyond, otherwise it could overlap due to the rapid decrease when off-screen)
+		let rightmost = tl0x;
+		let br0y = 244;
+		let br0x = tl0x + width;
+		
+		let destroy_location = 7808- (height * 32);   // 7808 is the first word of ground level row (y=244)
+		let location = destroy_location + tl0x;
+		
+		let sprite_seq_pos = 0;
+		return;
+	}
+	
+	method boolean collision(int tl1x, int tl1y, int br1x, int br1y) {
+		// given a top left corner coordinates and a bottom right corner coordinates, returns whether or not the rectangles intersect
+		
+		if (br0x = 4) {let br0x = 3;}  // just a little help to avoid colliding with the tail or unreasonable collision 
+		
+		// if this is on the left of the other or vice versa
+		//if ((~(tl0x < br1x)) | (~(tl1x < br0x))) {return false;} // this ignores collision within a single word
+		if (((tl0x > br1x)) | ((tl1x > br0x))) {return false;}
+		
+		// if this is above the other rectangle or vice versa
+		//if ((~(tl0y < br1y)) | (~(tl1y < br0y))) {return false;} // this ignores collision within a single word
+		if (((tl0y > br1y)) | ((tl1y > br0y))) {return false;}
+		
+		return true;
+	}
+
+}

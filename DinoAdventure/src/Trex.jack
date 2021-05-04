@@ -1,0 +1,193 @@
+// Trex.jack
+// class to represent the dinosaur character
+//
+
+/** Implements the jumping dinosaur that is not supposed to collide with obstacles */
+class Trex {
+	static int _gravity;
+	static int _jump_velocity;
+	
+	field int location;
+	field int initial_location;
+	field int downVelocity;  // represents the amount that the player still needs to be moving upward
+ 	field boolean feet_pos;
+	field int crouch_state;  // 0 if not crouching, 1 if just starting to crouch and 2 if continuing to crouch and 3 if exiting from a crouch (was crouching in the previous cycle) and 5 if exiting from glitch
+	field int clock;
+	field int height;
+	field int initial_height;
+	
+	field int glitching;
+	
+	constructor Trex new(int pos) {
+		/*
+		Given screen starting position (defaults to 7300 if 0), constructs a Trex, draws it, and implements movement with update
+		*/
+		let _gravity = 3;
+		let _jump_velocity = -30;
+		let glitching = -1;
+		
+		let location = pos;
+		if (location = 0) {let location = 7300;} // default
+		let initial_height = (location / 32) - 16; //(16 words tall head)
+		let height = initial_height;
+		let initial_location = location;
+		let downVelocity = 0;
+		let feet_pos = true;
+		let crouch_state = 0;
+		let clock = 0;
+		do Graphics.drawStand(location);
+		return this;
+	}
+	
+	method void dispose() {
+		do Memory.deAlloc(this);
+		return;
+	}
+	function void set_physics(int gravity, int jump_velocity) {
+		let _gravity = gravity;
+		let _jump_velocity = jump_velocity;
+		return;
+	}
+	function void update_jump(int change) {
+		let _jump_velocity = _jump_velocity - (change + change + change + change + change); // jump - 5 * change
+		if ((_jump_velocity < (-45)) | (_jump_velocity > (-15))) {let _jump_velocity = -30;} // reset jump velocity if it is out of bounds
+		return;
+	}
+	method void set_velocity(int vel) {
+		let downVelocity = vel;
+		return;
+	}
+	method int update() {
+		 
+		// check for glitching
+		if (glitching = 0) {let crouch_state = 5;} // turn off crouching if has been glitching for long enough
+		let glitching = glitching - 1;
+		
+		// Based on the current state (jumping, height, feet_pos, and crouching), re-render the character as needed
+		if (crouch_state = 0) { // crouch_state == 0 so do the normal
+			// First, figure out player location, then use that to re-render the necessary parts of the player
+			// simulate gravity by increasing downVelocity each cycle (actually, every other cycle to slow the jump speed), 
+			// but if player is on the ground, the ground pushes up and resets downVelocity to 0
+			
+			if (clock = 3) {let clock = 0;} // only update gravity every third cycle
+			else {let clock = clock + 1; return -1;}
+				
+			let downVelocity = downVelocity + _gravity;
+			let location = location + (32 * downVelocity);
+			let height = height + downVelocity;
+			// Don't fall below ground level, but when reach ground, reset downVelocity
+			if (location > initial_location) {
+				let location = initial_location;
+				let height = initial_height;
+				// if downVelocity > 1, then we are at the end of a jump and need to do a drawJump to clear the last artifacts
+				if (downVelocity > 1) {
+					do Graphics.drawJump(location, downVelocity);
+				}
+				let downVelocity = 0;
+			}
+			
+			// swap feet position if not in a jump
+			if (location = initial_location) {
+				do swap_feet();
+			}
+			// jumping, so re-render full player
+			else {
+				do Graphics.drawJump(location, downVelocity);
+			}
+		}
+		else {  // crouch_state != 0, so we have to do a different type of rendering
+		
+			if (crouch_state = 3) { // was crouching, now need to exit from crouch
+				// wipe previous head
+				do Graphics.eraseCrouchHead(location + 1);
+				// draw new head
+				do Graphics.drawStandHead(location - 511);
+				let crouch_state = 0;
+				let height = height - 16; //(head goes up 16 words)
+				
+				// in case was glitching, reset glitch counter
+				let glitching = -1;
+			}
+			else {
+				if (crouch_state = 2) { // continues to crouch, so just swap feet pos
+					do swap_feet();
+					let crouch_state = 3; // crouching this clock cycle
+				}
+				else { if (crouch_state = 1) { // crouch_state = 1, so just begining to crouch and must handle jump condition
+					// (downVelocity > (_gravity)) | (downVelocity < -(_gravity)) if want margin for entering glitch
+					// otherwise if (downVelocity) for only glitch at peak of jump
+					if (downVelocity){
+						// wipe the jumping part
+						do Graphics.eraseStand(location);
+						let location = initial_location;
+						let downVelocity = 0;
+			
+						do Graphics.drawCrouch(location);
+						let crouch_state = 3; // crouching this clock cycle
+						let height = initial_height + 16;
+					}
+					else { // was standing, so simply wipe the head
+						do Graphics.eraseStandHead(location - 511);
+						do Graphics.drawCrouch(location);
+						let crouch_state = 3; // crouching this clock cycle
+						let height = height + 16;
+						
+						// see if we need to start glitch
+						if (height < 200) {let glitching = 200; return 0;}
+						
+						return -1;
+					}
+					
+					}
+				else { // crouch_state = 5 so exiting from glitching
+					let location = initial_location;
+					let downVelocity = 0;
+					do Graphics.drawCrouch(location);
+					let crouch_state = 3; // crouching this clock cycle
+					let height = initial_height + 16; //(reset height, but dont include top head part)
+					let crouch_state = 3;
+				}
+				}
+			}
+			
+		
+		}
+		
+		return -1;
+		
+		
+	}
+	method void swap_feet() {
+		if (feet_pos) {
+			do Graphics.drawFeet1(location);
+			let feet_pos = false;
+		}
+		else {
+			do Graphics.drawFeet2(location);
+			let feet_pos = true;
+		}
+		return;
+	}
+	method void crouch() {
+		if (crouch_state) {
+			let crouch_state = 2;
+		}
+		else {
+			let crouch_state = 1;
+		}
+		return;
+	}
+	
+	method int jump() {
+		// only jump if on the ground 
+		if (location = initial_location) {
+			let downVelocity = _jump_velocity;
+			return 5;
+		}
+		return -1;
+	}
+	
+	method int collision_box_tly() {
+		return height;
+	}
+}
