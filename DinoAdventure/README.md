@@ -14,7 +14,7 @@ these features are necessary for completing certain achievements and make it eas
 Note: obstacle placement is generated mostly randomly, so there are some maps that are impossible to progress in; in this case, simply restart for a new random layout.
 
 ## Demo of features/achievements
-LINK################
+https://youtu.be/zXWyuDh928o
 (Warning, do not watch if you want to discover the hidden features yourself)
 
 ## Why you should play this
