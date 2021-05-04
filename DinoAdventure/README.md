@@ -26,3 +26,6 @@ A different, random map is generated each game
 
 It is challenging, yet doable 
 ![endscreen](./images/win-frame.png)
+
+## Aknowledgements
+https://github.com/N2Tstud3nt/nand2tetris-project09-Flappy-Bird  (for Linear Congruential Generator implementation on Hack, and general game ideas)
