@@ -20,3 +20,9 @@ LINK################
 ## Why you should play this
 There are glitches that turned into features
 ![feature](./images/flying-dino.png)
+
+A different, random map is generated each game
+![terrain](./images/random-terrain.png)
+
+It is challenging, yet doable 
+![endscreen](./images/win-frame.png)
