@@ -16,7 +16,6 @@ ELEMENTS = {
 reverse_elements = {
     i: element_name for element_name, i in ELEMENTS.items()
 }
-STATEMENTS = ["let", "if", "while", "do", "return", "break", "continue"]
 KEYWORDS = ["class", "constructor", "function", "method", "field", "static",
             "var", "int", "char", "boolean", "void", "true", "false", "null", "this",
             "let", "do", "if", "else", "while", "return", "break", "continue"]
@@ -68,12 +67,12 @@ class SymbolTable:
         """returns the index of the var_name, or None if it has not been defined"""
         return self.subroutineST.get(var_name, self.classST.get(var_name, (None, None, None)))[2]
 
-    def reset_classST(self):
+    def reset_class_symbol_table(self):
         self.classST = dict()
         self.counts["field"] = 0
         self.counts["static"] = 0
 
-    def reset_subroutineSt(self):
+    def reset_subroutine_symbol_table(self):
         self.subroutineST = dict()
         self.counts["local"] = 0
         self.counts["argument"] = 0
@@ -135,6 +134,7 @@ class JackTokenizer:
                     temp_token += char
                 else:
                     temp_token_type = ELEMENTS["keyword"] if temp_token in KEYWORDS else ELEMENTS["identifier"]
+
                     complete_token()
 
             # If we are just starting a new token, we have to figure out what type it is
@@ -156,6 +156,10 @@ class JackTokenizer:
                 else:
                     # the character is not valid in Jack, so we do not include it in the token
                     raise Exception("Invalid character: " + char)
+
+        # make sure we did not miss the last token from the line
+        if temp_token != "":
+            complete_token()
 
     def load_tokens(self, filename):
         commenting = False
@@ -192,7 +196,7 @@ class CompilationEngine:
 
     def compile_class(self, tokenizer=None):
         tokenizer = tokenizer or self.tokenizer
-        self.st.reset_classST()
+        self.st.reset_class_symbol_table()
         code = []
         token, token_type = tokenizer.current_token
         assert(token == "class")
@@ -255,7 +259,7 @@ class CompilationEngine:
         """returns a list of the vm code commands for this subroutine and re-loads subroutine level symbol table"""
         tokenizer = tokenizer or self.tokenizer
         token, token_type = tokenizer.current_token
-        self.st.reset_subroutineSt()
+        self.st.reset_subroutine_symbol_table()
 
         # Kind of subroutine
         assert(token in ["constructor", "function", "method"])
@@ -350,7 +354,7 @@ class CompilationEngine:
             token, token_type = tokenizer.advance()
 
         # statements
-        if token in STATEMENTS:
+        if token_type in [ELEMENTS["keyword"], ELEMENTS["identifier"]]:
             code += self.compile_statements(tokenizer)
             token, token_type = tokenizer.advance()
 
@@ -389,60 +393,130 @@ class CompilationEngine:
         # ;
         assert(token == ";")
 
+    def compile_statement(self, tokenizer=None):
+        tokenizer = tokenizer or self.tokenizer
+        token, token_type = tokenizer.current_token
+        code = []
+        if token_type == ELEMENTS["identifier"]:
+            # // subroutineCall; or // assignment;
+            if tokenizer.next_token()[0] in ["(", "."]:
+                # // subroutineCall
+                code += self.compile_subroutine_call(tokenizer)
+                # since it is like a do statement, dump the returned value
+                code.append(get_pop("temp", 0))
+            else:
+                # // assignment
+                assert (tokenizer.next_token()[0] in ["=", "["])
+                code += self.compile_assignment(tokenizer)
+
+            token, token_type = tokenizer.advance()
+            # ;
+            assert (token == ";")
+
+        elif token == "let":
+            code += self.compile_let_statement(tokenizer)
+        elif token == "if":
+            code += self.compile_if_statement(tokenizer)
+        elif token == "while":
+            code += self.compile_while_statement(tokenizer)
+        elif token == "break":
+            code += self.compile_break_statement(tokenizer)
+        elif token == "continue":
+            code += self.compile_continue_statement(tokenizer)
+        elif token == "do":
+            code += self.compile_do_statement(tokenizer)
+        elif token == "return":
+            code += self.compile_return_statement(tokenizer)
+        else:
+            raise Exception("Invalid statement")
+        return code
+
     def compile_statements(self, tokenizer=None):
-        """returns a list of vm instructions implementing the following statements, empty list if no statements"""
+        """returns a list of vm instructions implementing the following statements, empty list if no statements
+        """
         tokenizer = tokenizer or self.tokenizer
         token, token_type = tokenizer.current_token
 
-        if token in STATEMENTS:
-            code = []
-            if token == "let":
-                code += self.compile_let_statement(tokenizer)
-            elif token == "if":
-                code += self.compile_if_statement(tokenizer)
-            elif token == "while":
-                code += self.compile_while_statement(tokenizer)
-            elif token == "break":
-                code += self.compile_break_statement(tokenizer)
-            elif token == "continue":
-                code += self.compile_continue_statement(tokenizer)
-            elif token == "do":
-                code += self.compile_do_statement(tokenizer)
+        code = []
+        while token_type in [ELEMENTS["keyword"], ELEMENTS["identifier"]]:
+            code += self.compile_statement(tokenizer)
+
+            # end of statements if the next token does not start a statement
+            if tokenizer.next_token()[1] not in [ELEMENTS["keyword"], ELEMENTS["identifier"]]:
+                break
+            token, token_type = tokenizer.advance()
+
+        return code
+
+    def compile_subroutine_call(self, tokenizer=None):
+        """
+        // identifier '(' expressionList ')'
+        # subroutineName(ExpressionList) | varName.subroutineName(ExpressionList) | className.subroutineName(ExpList)
+        code ends by calling the subroutine; does nothing with the returned value
+        """
+        tokenizer = tokenizer or self.tokenizer
+        token, token_type = tokenizer.current_token
+        code = []
+        num_args = 0
+
+        # subroutineName | (className | varName)
+        assert (token_type == ELEMENTS["identifier"])
+        if tokenizer.next_token()[0] == ".":
+            if self.st.kind_of(token) is not None:
+                # push the object if this is a varName.methodName() syntax -> ObjectClass.methodName()
+                code.append(get_push(self.st.kind_of(token).replace("field", "this"), self.st.index_of(token)))
+                num_args += 1
+                function_name = self.st.type_of(token)
+
             else:
-                code += self.compile_return_statement(tokenizer)
+                # ClassName.subroutineName() syntax
+                function_name = token
 
-            while tokenizer.next_token()[0] in STATEMENTS:
-                # we look ahead with statements to avoid advancing into a token beyond a statement
-                token, token_type = tokenizer.advance()
+            token, token_type = tokenizer.advance()
+            assert (token == ".")
+            token, token_type = tokenizer.advance()
 
-                if token == "let":
-                    code += self.compile_let_statement(tokenizer)
-                elif token == "if":
-                    code += self.compile_if_statement(tokenizer)
-                elif token == "while":
-                    code += self.compile_while_statement(tokenizer)
-                elif token == "break":
-                    code += self.compile_break_statement(tokenizer)
-                elif token == "continue":
-                    code += self.compile_continue_statement(tokenizer)
-                elif token == "do":
-                    code += self.compile_do_statement(tokenizer)
-                else:
-                    code += self.compile_return_statement(tokenizer)
+            # subroutineName
+            assert (token_type == ELEMENTS["identifier"])
+            function_name += "." + token
 
-            return code
         else:
-            return []
+            # subroutineName() syntax -> Foo.subroutineName() if we are in class Foo
+            # and we also have to push pointer 0 since the subroutine will be acting on this
+            function_name = self.current_class + "." + token
+            code.append(get_push("pointer", 0))
+            num_args += 1
 
-    def compile_let_statement(self, tokenizer=None):
-        """:returns list of vm commands
-        // let varName = expression
+        token, token_type = tokenizer.advance()
+
+        # (
+        assert (token == "(")
+        token, token_type = tokenizer.advance()
+
+        # expressionList
+        if token != ")":
+            returned_stuff = self.compile_expression_list(tokenizer)
+            num_args += returned_stuff["num_elements"]
+            code += returned_stuff["code"]
+            token, token_type = tokenizer.advance()
+
+        # )
+        assert (token == ")")
+
+        # add the call function code
+        code.append(get_call(function_name, num_args))
+        # end of subroutine call
+        return code
+
+    def compile_assignment(self, tokenizer=None):
+        """
+        // varName = expression
         compiled (expression)
         pop var_kind var_index
 
         or
 
-        // let arr[expression1] = expression2
+        // arr[expression1] = expression2
         push arr
         compiled (expression1)
         add                         // top of stack holds address for arr[expression]
@@ -450,19 +524,15 @@ class CompilationEngine:
         pop temp 0                  // temp 0 = value of expression2
         pop pointer 1              // anchor THAT to address for arr[expression]
         push temp 0
-        pop that 0
-        """
+        pop that 0"""
         tokenizer = tokenizer or self.tokenizer
-        # let
-        assert(tokenizer.current_token[0] == "let")
-        code = []
-        token, token_type = tokenizer.advance()
+        token, token_type = tokenizer.current_token
 
         # varName
         assert (token_type == ELEMENTS["identifier"] and self.st.kind_of(token) is not None)
         var_name = token
         token, token_type = tokenizer.advance()
-
+        code = []
         # ([ expression ])?
         if token == "[":
             # [
@@ -476,7 +546,7 @@ class CompilationEngine:
             token, token_type = tokenizer.advance()
 
             # ]
-            assert(token == "]")
+            assert (token == "]")
             token, token_type = tokenizer.advance()
             # =
             assert (token == "=")
@@ -484,31 +554,62 @@ class CompilationEngine:
 
             # compiled (expression2)
             code += self.compile_expression(tokenizer)
-            token, token_type = tokenizer.advance()
-            # ;
-            assert (token == ";")
 
             # pop temp 0; pop pointer 1; push temp 0; pop that 0
             code += [get_pop("temp", 0), get_pop("pointer", 1), get_push("temp", 0), get_pop("that", 0)]
 
         else:
             # =
-            assert(token == "=")
+            assert (token == "=")
             tokenizer.advance()
 
             # push expression onto stack
             code += self.compile_expression(tokenizer)
-            token, token_type = tokenizer.advance()
-            # ;
-            assert (token == ";")
 
             # assign the result of the expression to the variable by pop-ing into the variable
             code.append(get_pop(self.st.kind_of(var_name).replace("field", "this"), self.st.index_of(var_name)))
 
         return code
 
+    def compile_let_statement(self, tokenizer=None):
+        """:returns list of vm commands
+        // let assignment;
+        """
+        tokenizer = tokenizer or self.tokenizer
+        # let
+        assert(tokenizer.current_token[0] == "let")
+        tokenizer.advance()
+
+        code = self.compile_assignment(tokenizer)
+
+        token, token_type = tokenizer.advance()
+        # ;
+        assert (token == ";")
+        return code
+
+    def compile_block(self, tokenizer=None):
+        """
+        { statements }
+        """
+        tokenizer = tokenizer or self.tokenizer
+        token, token_type = tokenizer.current_token
+        code = []
+        # {
+        assert (token == "{")
+        token, token_type = tokenizer.advance()
+
+        # compiled statements
+        if token_type in [ELEMENTS["keyword"], ELEMENTS["identifier"]]:
+            code += self.compile_statements(tokenizer)
+            token, token_type = tokenizer.advance()
+
+        # }
+        assert (token == "}")
+        return code
+
     def compile_if_statement(self, tokenizer=None):
         """:returns list of vm commands
+        handles both {statements} and statement without {}
         // if (expression) {statements1} else {statements2}
             compiled (expression)
             not
@@ -549,44 +650,34 @@ class CompilationEngine:
         # )
         assert (token == ")")
         token, token_type = tokenizer.advance()
-
-        # {
-        assert (token == "{")
-        token, token_type = tokenizer.advance()
-
-        # compiled statements
-        if token in STATEMENTS:
-            code += self.compile_statements(tokenizer)
-            token, token_type = tokenizer.advance()
+        # compile statement or {statements}
+        if token == "{":
+            code += self.compile_block(tokenizer)
+        else:
+            assert (token_type in [ELEMENTS["keyword"], ELEMENTS["identifier"]])
+            code += self.compile_statement(tokenizer)
 
         code += [get_goto(l2), get_label(l1)]
-
-        # }
-        assert (token == "}")
 
         # else
         if tokenizer.next_token()[0] == "else":
             tokenizer.advance()  # eat the else
             token, token_type = tokenizer.advance()
 
-            # {
-            assert (token == "{")
-            token, token_type = tokenizer.advance()
-
-            # statements
-            if token in STATEMENTS:
-                code += self.compile_statements(tokenizer)
-                token, token_type = tokenizer.advance()
-
-            # }
-            assert (token == "}")
+            # compile statement or {statements}
+            if token == "{":
+                code += self.compile_block(tokenizer)
+            else:
+                assert (token_type in [ELEMENTS["keyword"], ELEMENTS["identifier"]])
+                code += self.compile_statement(tokenizer)
 
         code.append(get_label(l2))
+
         return code
 
     def compile_while_statement(self, tokenizer=None):
         """:returns list of vm commands
-        // while (expression) {statements}
+        // while (expression) {statements} or // while (expression) statement
         label L1
             compiled (expression)
             not
@@ -619,19 +710,15 @@ class CompilationEngine:
 
         # )
         assert (token == ")")
+
         token, token_type = tokenizer.advance()
 
-        # {
-        assert (token == "{")
-        token, token_type = tokenizer.advance()
-
-        # compiled statements
-        if token in STATEMENTS:
-            code += self.compile_statements(tokenizer)
-            token, token_type = tokenizer.advance()
-
-        # }
-        assert (token == "}")
+        # compile statement or {statements}
+        if token == "{":
+            code += self.compile_block(tokenizer)
+        else:
+            assert (token_type in [ELEMENTS["keyword"], ELEMENTS["identifier"]])
+            code += self.compile_statement(tokenizer)
 
         # re-instate outer while loop labels
         self.while_labels = (previous_l1, previous_l2)
@@ -663,69 +750,23 @@ class CompilationEngine:
         return [get_goto(self.while_labels[0])]
 
     def compile_do_statement(self, tokenizer=None):
-        """returns a list of vm commands to call the subroutine specified by the do statement"""
+        """returns a list of vm commands to call the subroutine specified by the do statement
+        // do subroutineCall;
+        """
         tokenizer = tokenizer or self.tokenizer
-        code = []
-        num_args = 0
+        token, token_type = tokenizer.current_token
         # do
-        assert (tokenizer.current_token[0] == "do")
-        token, token_type = tokenizer.advance()
+        assert(token == "do")
+        tokenizer.advance()
 
         # subroutineCall
-        # subroutineName | (className | varName)
-        assert (token_type == ELEMENTS["identifier"])
-        if tokenizer.next_token()[0] == ".":
-            if self.st.kind_of(token) is not None:
-                # push the object if this is a varName.methodName() syntax -> ObjectClass.methodName()
-                code.append(get_push(self.st.kind_of(token).replace("field", "this"), self.st.index_of(token)))
-                num_args += 1
-                function_name = self.st.type_of(token)
+        code = self.compile_subroutine_call(tokenizer)
 
-            else:
-                # ClassName.subroutineName() syntax
-                function_name = token
-
-            token, token_type = tokenizer.advance()
-            assert(token == ".")
-            token, token_type = tokenizer.advance()
-
-            # subroutineName
-            assert (token_type == ELEMENTS["identifier"])
-            function_name += "." + token
-
-        else:
-            # subroutineName() syntax -> Foo.subroutineName() if we are in class Foo
-            # and we also have to push pointer 0 since the subroutine will be acting on this
-            function_name = self.current_class + "." + token
-            code.append(get_push("pointer", 0))
-            num_args += 1
-
-        token, token_type = tokenizer.advance()
-
-        # (
-        assert (token == "(")
-        token, token_type = tokenizer.advance()
-
-        # expressionList
-        if token != ")":
-            returned_stuff = self.compile_expression_list(tokenizer)
-            num_args += returned_stuff["num_elements"]
-            code += returned_stuff["code"]
-            token, token_type = tokenizer.advance()
-
-        # )
-        assert (token == ")")
-        token, token_type = tokenizer.advance()
-        # end of subroutine call
-
-        # ;
-        assert (token == ";")
-
-        # add the call function code
-        code.append(get_call(function_name, num_args))
         # since it is a do statement, dump the returned value
         code.append(get_pop("temp", 0))
-
+        token, token_type = tokenizer.advance()
+        # ;
+        assert (token == ";")
         return code
 
     def compile_return_statement(self, tokenizer=None):
@@ -846,46 +887,7 @@ class CompilationEngine:
 
             elif next_token == "(" or next_token == ".":
                 # ClassName.subroutineName() | varName.methodName() | subroutineName() syntax
-                num_args = 0
-                if next_token == ".":
-                    if self.st.kind_of(token) is not None:
-                        # push the object if this is a varName.methodName() syntax -> ObjectClass.methodName()
-                        code.append(get_push(self.st.kind_of(token).replace("field", "this"), self.st.index_of(token)))
-                        num_args += 1
-                        function_name = self.st.type_of(token)
-
-                    else:
-                        # ClassName.subroutineName() syntax
-                        function_name = token
-
-                    token, token_type = tokenizer.advance()
-                    assert (token == ".")
-                    token, token_type = tokenizer.advance()
-
-                    # subroutineName
-                    assert (token_type == ELEMENTS["identifier"])
-                    function_name += "." + token
-
-                else:
-                    # subroutineName() syntax -> Foo.subroutineName() if we are in class Foo
-                    function_name = self.current_class + "." + token
-
-                token, token_type = tokenizer.advance()
-
-                # (
-                assert (token == "(")
-                token, token_type = tokenizer.advance()
-
-                # expressionList
-                if token != ")":
-                    returned_stuff = self.compile_expression_list(tokenizer)
-                    num_args += returned_stuff["num_elements"]
-                    code += returned_stuff["code"]
-                    token, token_type = tokenizer.advance()
-
-                # )
-                assert (token == ")")
-                code.append(get_call(function_name, num_args))
+                code += self.compile_subroutine_call(tokenizer)
                 # since this is in an expression, we leave the returned value on the stack
 
             else:
